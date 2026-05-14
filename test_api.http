@@ -1,0 +1,126 @@
+### REST API tests (VS Code REST Client or similar)
+### Default server: http://localhost:3000
+
+@baseUrl = http://localhost:3000/api
+@authToken = replace-with-token-from-login
+
+### Health
+GET http://localhost:3000/health
+
+### API index (all route URLs as JSON)
+GET http://localhost:3000/api
+
+### --- Auth ---
+
+### Register
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+    "name": "Ahmed",
+    "email": "ahmed@example.com",
+    "password": "password123",
+    "confirmPassword": "password123"
+}
+
+### Login (name or email)
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+    "email": "ahmed@example.com",
+    "password": "password123"
+}
+
+### Forgot password (code printed in server console in dev)
+POST {{baseUrl}}/auth/forgot-password
+Content-Type: application/json
+
+{
+    "email": "ahmed@example.com"
+}
+
+### Verify code
+POST {{baseUrl}}/auth/verify-code
+Content-Type: application/json
+
+{
+    "email": "ahmed@example.com",
+    "code": "123456"
+}
+
+### Reset password
+POST {{baseUrl}}/auth/reset-password
+Content-Type: application/json
+
+{
+    "email": "ahmed@example.com",
+    "code": "123456",
+    "newPassword": "newpassword123"
+}
+
+### --- Users (Bearer) ---
+
+### Current user profile
+GET {{baseUrl}}/users/me
+Authorization: Bearer {{authToken}}
+
+### Update profile
+PATCH {{baseUrl}}/users/me
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+    "name": "Ahmed Ali"
+}
+
+### --- Products ---
+
+### List products (paginated)
+GET {{baseUrl}}/products?page=1&limit=10
+
+### Get product by id
+GET {{baseUrl}}/products/1
+
+### Create product (requires auth)
+POST {{baseUrl}}/products
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+    "name": "Sample product",
+    "description": "Demo item",
+    "price": 19.99,
+    "stock": 100
+}
+
+### Update product
+PATCH {{baseUrl}}/products/1
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+    "price": 24.99,
+    "stock": 50
+}
+
+### Delete product
+DELETE {{baseUrl}}/products/1
+Authorization: Bearer {{authToken}}
+
+### --- Contact ---
+
+### Submit contact message
+POST {{baseUrl}}/contact/submit
+Content-Type: application/json
+
+{
+    "name": "Ali",
+    "email": "ali@example.com",
+    "message": "Hello from REST client."
+}
+
+### --- Translation (multipart, auth) ---
+### POST {{baseUrl}}/translation/upload
+### Authorization: Bearer <token>
+### Body: form-data, key "image" (file)
