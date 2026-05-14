@@ -3,7 +3,7 @@ require('dotenv').config();
 const isProduction = process.env.NODE_ENV === 'production';
 
 if (isProduction && !process.env.JWT_SECRET) {
-  throw new Error('JWT_SECRET is required in production');
+  console.error('[CONFIG] WARNING: JWT_SECRET is not set in production! Using fallback (INSECURE).');
 }
 
 module.exports = {

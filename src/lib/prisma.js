@@ -1,4 +1,4 @@
-require('dotenv').config();
+// dotenv is loaded by config/index.js before this module is required
 
 const { PrismaClient } = require('@prisma/client');
 

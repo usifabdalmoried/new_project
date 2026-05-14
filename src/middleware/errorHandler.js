@@ -1,9 +1,15 @@
 const multer = require('multer');
 const { AppError } = require('../utils/AppError');
 const { fail } = require('../utils/response');
-const config = require('../config');
 
-function errorHandler(err, req, res, _next) {
+// Express 5 detects error middleware by fn.length === 4
+// All 4 parameters MUST be named (not prefixed with _)
+function errorHandler(err, req, res, next) {
+  // If headers already sent, delegate to Express default handler
+  if (res.headersSent) {
+    return next(err);
+  }
+
   if (err instanceof multer.MulterError) {
     return fail(res, err.message, 400);
   }
@@ -30,3 +36,4 @@ function errorHandler(err, req, res, _next) {
 }
 
 module.exports = { errorHandler };
+

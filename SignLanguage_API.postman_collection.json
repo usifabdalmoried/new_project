@@ -1,14 +1,13 @@
-{
-	"info": {
+{"info": {
 		"_postman_id": "sign-language-api-v2",
-		"name": "🤟 Sign Language API v2",
-		"description": "Complete API collection for the Sign Language Translation Backend.\n\n---\n\n## 🚀 Setup\n\n**Before you start, run both servers:**\n\n**Terminal 1 — AI Service (Python Flask):**\n```\ncd d:\\new_project\\ai_service\npython app.py\n```\n\n**Terminal 2 — Backend (Node.js):**\n```\ncd d:\\new_project\nnpm run dev\n```\n\n---\n\n## 📌 Variables\n\n| Variable | Value |\n|---|---|\n| `baseUrl` | http://localhost:3000/api |\n| `aiBaseUrl` | http://127.0.0.1:5000 |\n| `authToken` | Auto-filled after Login |\n\n---\n\n## 📋 Steps\n1. Run **Register** to create account\n2. Run **Login** → Token saved automatically ✅\n3. Use any protected endpoint (Token added automatically)\n4. Test AI directly from **🤖 AI Service (Direct)** folder",
+		"name": "🤟 Sign Language API v2 (Railway)",
+		"description": "Complete API collection for the Sign Language Translation Backend.\n\n---\n\n## 🚀 Deployment\n\n**Backend (Railway):** https://newproject-production-396a.up.railway.app\n\n**AI Service (Local):** http://127.0.0.1:5000 (run locally)\n\n---\n\n## 📌 Variables\n\n| Variable | Value |\n|---|---|\n| `baseUrl` | https://newproject-production-396a.up.railway.app/api |\n| `aiBaseUrl` | http://127.0.0.1:5000 |\n| `authToken` | Auto-filled after Login |\n\n---\n\n## 📋 Steps\n1. Run **Register** to create account\n2. Run **Login** → Token saved automatically ✅\n3. Use any protected endpoint (Token added automatically)\n4. Test AI directly from **🤖 AI Service (Direct)** folder",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"variable": [
 		{
 			"key": "baseUrl",
-			"value": "http://localhost:3000/api",
+			"value": "https://newproject-production-396a.up.railway.app/api",
 			"type": "string"
 		},
 		{
@@ -32,11 +31,7 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "http://localhost:3000/health",
-							"protocol": "http",
-							"host": ["localhost"],
-							"port": "3000",
-							"path": ["health"]
+							"raw": "https://newproject-production-396a.up.railway.app/health","protocol": "https","host": ["newproject-production-396a.up.railway.app"],"path": ["health"]
 						},
 						"description": "Check if the server is running.\n\n✅ Expected Response (200):\n```json\n{\"status\": \"ok\"}\n```"
 					},
@@ -48,7 +43,7 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "http://localhost:3000/api",
+							"raw": "https://newproject-production-396a.up.railway.app/api",
 							"protocol": "http",
 							"host": ["localhost"],
 							"port": "3000",

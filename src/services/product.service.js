@@ -35,7 +35,9 @@ async function listProducts({ page = 1, limit = 20 }) {
 }
 
 async function getProductById(id) {
-  const row = await prisma.product.findUnique({ where: { id } });
+  const numId = parseInt(String(id), 10);
+  if (isNaN(numId)) throw new AppError('Invalid product ID', 400);
+  const row = await prisma.product.findUnique({ where: { id: numId } });
   if (!row) {
     throw new AppError('Product not found', 404);
   }
@@ -55,6 +57,8 @@ async function createProduct({ name, description, price, stock = 0 }) {
 }
 
 async function updateProduct(id, { name, description, price, stock }) {
+  const numId = parseInt(String(id), 10);
+  if (isNaN(numId)) throw new AppError('Invalid product ID', 400);
   const data = {};
   if (name !== undefined) data.name = name;
   if (description !== undefined) data.description = description;
@@ -63,7 +67,7 @@ async function updateProduct(id, { name, description, price, stock }) {
 
   try {
     const row = await prisma.product.update({
-      where: { id },
+      where: { id: numId },
       data,
     });
     return serializeProduct(row);
@@ -76,8 +80,10 @@ async function updateProduct(id, { name, description, price, stock }) {
 }
 
 async function deleteProduct(id) {
+  const numId = parseInt(String(id), 10);
+  if (isNaN(numId)) throw new AppError('Invalid product ID', 400);
   try {
-    await prisma.product.delete({ where: { id } });
+    await prisma.product.delete({ where: { id: numId } });
   } catch (e) {
     if (e.code === 'P2025') {
       throw new AppError('Product not found', 404);
