@@ -5,7 +5,6 @@
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
-    "build": "prisma generate && prisma db push --skip-generate",
     "dev": "node --watch src/server.js",
     "postinstall": "prisma generate",
     "prisma:generate": "prisma generate",
