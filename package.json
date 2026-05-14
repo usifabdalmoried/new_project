@@ -4,7 +4,8 @@
   "description": "REST API backend (Express + Prisma)",
   "main": "src/server.js",
   "scripts": {
-    "start": "./node_modules/.bin/prisma db push --skip-generate && node src/server.js",
+    "start": "node src/server.js",
+    "build": "prisma generate && prisma db push --skip-generate",
     "dev": "node --watch src/server.js",
     "postinstall": "prisma generate",
     "prisma:generate": "prisma generate",
