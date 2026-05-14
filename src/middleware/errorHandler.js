@@ -24,8 +24,8 @@ function errorHandler(err, req, res, _next) {
     }
   }
 
-  console.error(err);
-  const message = config.isProduction ? 'Internal server error' : err.message || 'Internal server error';
+  console.error('[ERROR]', err.name, err.message, err.stack);
+  const message = err.message || 'Internal server error';
   return fail(res, message, 500);
 }
 
