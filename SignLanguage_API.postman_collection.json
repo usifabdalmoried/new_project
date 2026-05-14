@@ -1,4 +1,5 @@
-{"info": {
+{
+	"info": {
 		"_postman_id": "sign-language-api-v2",
 		"name": "🤟 Sign Language API v2 (Railway)",
 		"description": "Complete API collection for the Sign Language Translation Backend.\n\n---\n\n## 🚀 Deployment\n\n**Backend (Railway):** https://newproject-production-396a.up.railway.app\n\n**AI Service (Local):** http://127.0.0.1:5000 (run locally)\n\n---\n\n## 📌 Variables\n\n| Variable | Value |\n|---|---|\n| `baseUrl` | https://newproject-production-396a.up.railway.app/api |\n| `aiBaseUrl` | http://127.0.0.1:5000 |\n| `authToken` | Auto-filled after Login |\n\n---\n\n## 📋 Steps\n1. Run **Register** to create account\n2. Run **Login** → Token saved automatically ✅\n3. Use any protected endpoint (Token added automatically)\n4. Test AI directly from **🤖 AI Service (Direct)** folder",
@@ -31,7 +32,17 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "https://newproject-production-396a.up.railway.app/health","protocol": "https","host": ["newproject-production-396a.up.railway.app"],"path": ["health"]
+							"raw": "https://newproject-production-396a.up.railway.app/health",
+							"protocol": "https",
+							"host": [
+								"newproject-production-396a",
+								"up",
+								"railway",
+								"app"
+							],
+							"path": [
+								"health"
+							]
 						},
 						"description": "Check if the server is running.\n\n✅ Expected Response (200):\n```json\n{\"status\": \"ok\"}\n```"
 					},
@@ -43,11 +54,11 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "https://newproject-production-396a.up.railway.app/api",
-							"protocol": "http",
-							"host": ["localhost"],
-							"port": "3000",
-							"path": ["api"]
+							"raw": "{{baseUrl}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": []
 						},
 						"description": "Returns a full list of all available API endpoints."
 					},
@@ -79,8 +90,13 @@
 						},
 						"url": {
 							"raw": "{{baseUrl}}/auth/register",
-							"host": ["{{baseUrl}}"],
-							"path": ["auth", "register"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"register"
+							]
 						},
 						"description": "Register a new user.\n\n✅ Expected Response (201):\n```json\n{\"message\": \"User registered successfully\"}\n```"
 					},
@@ -128,8 +144,13 @@
 						},
 						"url": {
 							"raw": "{{baseUrl}}/auth/login",
-							"host": ["{{baseUrl}}"],
-							"path": ["auth", "login"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
 						},
 						"description": "Login with name and password.\n\n⚡ Token is saved **automatically** to `authToken` variable!\n\n✅ Expected Response (200):\n```json\n{\n  \"message\": \"Login successful\",\n  \"token\": \"eyJhbGci...\",\n  \"user\": { \"id\": 1, \"name\": \"abdallah\", \"email\": \"...\" }\n}\n```"
 					},
@@ -156,8 +177,13 @@
 						},
 						"url": {
 							"raw": "{{baseUrl}}/auth/forgot-password",
-							"host": ["{{baseUrl}}"],
-							"path": ["auth", "forgot-password"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"forgot-password"
+							]
 						},
 						"description": "Request a password reset code.\n\n⚠️ Check the **server terminal** for the 6-digit code.\n\n✅ Expected Response (200):\n```json\n{\"message\": \"Verification code sent to email\"}\n```"
 					},
@@ -184,8 +210,13 @@
 						},
 						"url": {
 							"raw": "{{baseUrl}}/auth/verify-code",
-							"host": ["{{baseUrl}}"],
-							"path": ["auth", "verify-code"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"verify-code"
+							]
 						},
 						"description": "Verify the 6-digit code from the server terminal.\n\n⚠️ Replace `123456` with the real code.\n\n✅ Expected Response (200):\n```json\n{\"message\": \"Code verified successfully.\"}\n```"
 					},
@@ -212,8 +243,13 @@
 						},
 						"url": {
 							"raw": "{{baseUrl}}/auth/reset-password",
-							"host": ["{{baseUrl}}"],
-							"path": ["auth", "reset-password"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"reset-password"
+							]
 						},
 						"description": "Reset password using the verified code.\n\n✅ Expected Response (200):\n```json\n{\"message\": \"Password reset successful\"}\n```"
 					},
@@ -237,8 +273,13 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/users/me",
-							"host": ["{{baseUrl}}"],
-							"path": ["users", "me"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users",
+								"me"
+							]
 						},
 						"description": "Get current logged-in user profile.\n\n🔐 Requires Login first.\n\n✅ Expected Response (200):\n```json\n{\n  \"id\": 1,\n  \"name\": \"abdallah\",\n  \"email\": \"abdallah@example.com\"\n}\n```"
 					},
@@ -270,8 +311,13 @@
 						},
 						"url": {
 							"raw": "{{baseUrl}}/users/me",
-							"host": ["{{baseUrl}}"],
-							"path": ["users", "me"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users",
+								"me"
+							]
 						},
 						"description": "Update current user's profile.\n\n🔐 Requires Login first.\n\n✅ Expected Response (200):\n```json\n{\"message\": \"Profile updated successfully\"}\n```"
 					},
@@ -289,8 +335,12 @@
 						"header": [],
 						"url": {
 							"raw": "{{baseUrl}}/products?page=1&limit=20",
-							"host": ["{{baseUrl}}"],
-							"path": ["products"],
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"products"
+							],
 							"query": [
 								{
 									"key": "page",
@@ -313,8 +363,13 @@
 						"header": [],
 						"url": {
 							"raw": "{{baseUrl}}/products/1",
-							"host": ["{{baseUrl}}"],
-							"path": ["products", "1"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"products",
+								"1"
+							]
 						},
 						"description": "Get a single product by ID.\n\n⚠️ Replace `1` with the actual product ID.\n\n✅ No auth required."
 					},
@@ -346,8 +401,12 @@
 						},
 						"url": {
 							"raw": "{{baseUrl}}/products",
-							"host": ["{{baseUrl}}"],
-							"path": ["products"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"products"
+							]
 						},
 						"description": "Create a new product.\n\n🔐 Requires Login first."
 					},
@@ -379,8 +438,13 @@
 						},
 						"url": {
 							"raw": "{{baseUrl}}/products/1",
-							"host": ["{{baseUrl}}"],
-							"path": ["products", "1"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"products",
+								"1"
+							]
 						},
 						"description": "Update a product by ID.\n\n🔐 Requires Login.\n⚠️ Replace `1` with actual product ID."
 					},
@@ -399,8 +463,13 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/products/1",
-							"host": ["{{baseUrl}}"],
-							"path": ["products", "1"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"products",
+								"1"
+							]
 						},
 						"description": "Delete a product by ID.\n\n🔐 Requires Login.\n⚠️ Replace `1` with actual product ID."
 					},
@@ -435,8 +504,13 @@
 						},
 						"url": {
 							"raw": "{{baseUrl}}/translation/upload",
-							"host": ["{{baseUrl}}"],
-							"path": ["translation", "upload"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"translation",
+								"upload"
+							]
 						},
 						"description": "Upload a sign language image for translation.\n\n🔐 Requires Login first.\n\n**Steps:**\n1. Login first\n2. Body → form-data\n3. Key: `image` → change to **File** type\n4. Select your image\n5. Send!\n\n✅ Expected Response (200):\n```json\n{\n  \"message\": \"Translation successful\",\n  \"imageUrl\": \"uploads/image-xxx.jpg\",\n  \"translation\": \"A\",\n  \"audioUrl\": \"uploads/audio-xxx.mp3\"\n}\n```"
 					},
@@ -468,8 +542,13 @@
 						},
 						"url": {
 							"raw": "{{baseUrl}}/contact/submit",
-							"host": ["{{baseUrl}}"],
-							"path": ["contact", "submit"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"contact",
+								"submit"
+							]
 						},
 						"description": "Submit a contact/support message.\n\n✅ No auth required.\n\n✅ Expected Response (200/201):\n```json\n{\"message\": \"Message submitted successfully\"}\n```"
 					},
@@ -487,8 +566,12 @@
 						"header": [],
 						"url": {
 							"raw": "{{aiBaseUrl}}/health",
-							"host": ["{{aiBaseUrl}}"],
-							"path": ["health"]
+							"host": [
+								"{{aiBaseUrl}}"
+							],
+							"path": [
+								"health"
+							]
 						},
 						"description": "Check if the Python Flask AI Service is running.\n\n✅ Expected Response (200):\n```json\n{\"status\": \"ok\", \"device\": \"cpu\"}\n```\n\n⚠️ Make sure to run: `python app.py` in `ai_service` folder first."
 					},
@@ -512,8 +595,12 @@
 						},
 						"url": {
 							"raw": "{{aiBaseUrl}}/predict",
-							"host": ["{{aiBaseUrl}}"],
-							"path": ["predict"]
+							"host": [
+								"{{aiBaseUrl}}"
+							],
+							"path": [
+								"predict"
+							]
 						},
 						"description": "Send an image directly to the AI model and get the sign language prediction.\n\n**No auth required** - direct Flask API call.\n\n**Steps:**\n1. Body → form-data\n2. Key: `file` → change type to **File**\n3. Select a sign language image\n4. Send!\n\n✅ Expected Response (200):\n```json\n{\n  \"translation\": \"A\",\n  \"result\": \"A\",\n  \"confidence\": 0.9876\n}\n```\n\n📌 Classes: 0-9 (digits) + A-Z (letters) = 36 total"
 					},
