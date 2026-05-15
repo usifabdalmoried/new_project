@@ -27,6 +27,11 @@ Thumbs.db
 .vscode/
 .idea/
 
+# Python (AI Service)
+venv/
+__pycache__/
+*.pyc
+
 # Build output
 dist/
 build/
