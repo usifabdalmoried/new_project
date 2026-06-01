@@ -40,6 +40,11 @@ router.get('/', (req, res) => {
             headers: { Authorization: 'Bearer <token>' },
             body: 'multipart/form-data field name: image',
           },
+          history: {
+            method: 'GET',
+            url: `${base}/api/translation/history?page=1&limit=20`,
+            headers: { Authorization: 'Bearer <token>' },
+          },
         },
         staticUploads: { method: 'GET', url: `${base}/uploads/<filename>` },
       },

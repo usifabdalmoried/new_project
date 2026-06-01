@@ -515,6 +515,41 @@
 						"description": "Upload a sign language image for translation.\n\n🔐 Requires Login first.\n\n**Steps:**\n1. Login first\n2. Body → form-data\n3. Key: `image` → change to **File** type\n4. Select your image\n5. Send!\n\n✅ Expected Response (200):\n```json\n{\n  \"message\": \"Translation successful\",\n  \"imageUrl\": \"uploads/image-xxx.jpg\",\n  \"translation\": \"A\",\n  \"audioUrl\": \"uploads/audio-xxx.mp3\"\n}\n```"
 					},
 					"response": []
+				},
+				{
+					"name": "13b - Translation History",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"description": "Auto-filled after Login ✅"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/translation/history?page=1&limit=20",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"translation",
+								"history"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Get your translation history (all previous sign language translations).\n\n🔐 Requires Login first.\n\n✅ Expected Response (200):\n```json\n{\n  \"success\": true,\n  \"data\": {\n    \"items\": [\n      {\n        \"id\": 1,\n        \"imageUrl\": \"uploads/image-xxx.jpg\",\n        \"translation\": \"A\",\n        \"audioUrl\": \"uploads/audio-xxx.mp3\",\n        \"createdAt\": \"2026-06-01T...\"\n      }\n    ],\n    \"page\": 1,\n    \"limit\": 20,\n    \"total\": 5,\n    \"totalPages\": 1\n  }\n}\n```"
+					},
+					"response": []
 				}
 			]
 		},
@@ -560,25 +595,29 @@
 			"name": "🤖 AI Service (Direct)",
 			"item": [
 				{
-					"name": "15 - AI Health Check",
+					"name": "15 - AI Health Check (via Backend)",
 					"request": {
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{aiBaseUrl}}/health",
+							"raw": "https://newproject-production-396a.up.railway.app/health",
+							"protocol": "https",
 							"host": [
-								"{{aiBaseUrl}}"
+								"newproject-production-396a",
+								"up",
+								"railway",
+								"app"
 							],
 							"path": [
 								"health"
 							]
 						},
-						"description": "Check if the Python Flask AI Service is running.\n\n✅ Expected Response (200):\n```json\n{\"status\": \"ok\", \"device\": \"cpu\"}\n```\n\n⚠️ Make sure to run: `python app.py` in `ai_service` folder first."
+						"description": "Check if the Backend server + AI proxy is running.\n\n✅ Expected Response (200):\n```json\n{\"success\": true, \"data\": {\"status\": \"ok\"}}\n```"
 					},
 					"response": []
 				},
 				{
-					"name": "16 - AI Direct Predict (Test)",
+					"name": "16 - AI Predict (via Backend Proxy)",
 					"request": {
 						"method": "POST",
 						"header": [],
@@ -594,15 +633,76 @@
 							]
 						},
 						"url": {
-							"raw": "{{aiBaseUrl}}/predict",
+							"raw": "https://newproject-production-396a.up.railway.app/predict",
+							"protocol": "https",
 							"host": [
-								"{{aiBaseUrl}}"
+								"newproject-production-396a",
+								"up",
+								"railway",
+								"app"
 							],
 							"path": [
 								"predict"
 							]
 						},
-						"description": "Send an image directly to the AI model and get the sign language prediction.\n\n**No auth required** - direct Flask API call.\n\n**Steps:**\n1. Body → form-data\n2. Key: `file` → change type to **File**\n3. Select a sign language image\n4. Send!\n\n✅ Expected Response (200):\n```json\n{\n  \"translation\": \"A\",\n  \"result\": \"A\",\n  \"confidence\": 0.9876\n}\n```\n\n📌 Classes: 0-9 (digits) + A-Z (letters) = 36 total"
+						"description": "Send an image to the AI model **through the Node.js backend proxy** at `/predict`.\n\n**No auth required** — the backend forwards the request to the Flask AI service.\n\n**Steps:**\n1. Body → form-data\n2. Key: `file` → change type to **File**\n3. Select a sign language image\n4. Send!\n\n✅ Expected Response (200):\n```json\n{\n  \"translation\": \"A\",\n  \"result\": \"A\",\n  \"confidence\": 0.9876\n}\n```\n\n📌 Classes: 0-9 (digits) + A-Z (letters) = 36 total\n\n⚠️ For this to work, the AI Flask service must also be running (locally or on Railway)."
+					},
+					"response": []
+				},
+				{
+					"name": "17 - AI Direct Predict (Local Flask)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": [],
+									"description": "Select a sign language image"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://127.0.0.1:5000/predict",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "5000",
+							"path": [
+								"predict"
+							]
+						},
+						"description": "Send an image **directly** to the local Flask AI service (bypassing Node.js backend).\n\n⚠️ Requires Flask AI running locally: `cd ai_service && python app.py`\n\n**Steps:**\n1. Body → form-data\n2. Key: `file` → change type to **File**\n3. Select a sign language image\n4. Send!\n\n✅ Expected Response (200):\n```json\n{\n  \"translation\": \"A\",\n  \"result\": \"A\",\n  \"confidence\": 0.9876\n}\n```"
+					},
+					"response": []
+				},
+				{
+					"name": "18 - AI Health Check (Local Flask)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://127.0.0.1:5000/health",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "5000",
+							"path": [
+								"health"
+							]
+						},
+						"description": "Check if the local Python Flask AI Service is running.\n\n⚠️ Run first: `cd ai_service && python app.py`\n\n✅ Expected Response (200):\n```json\n{\"status\": \"ok\", \"device\": \"cpu\"}\n```"
 					},
 					"response": []
 				}

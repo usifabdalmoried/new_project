@@ -45,7 +45,7 @@ async function uploadAndTranslate(userId, file) {
     },
   });
 
-  const norm = (p) => p.replace(/\\/g, '/');
+const norm = (p) => p ? p.replace(/\\/g, '/') : null;
 
   return {
     message: 'Translation successful',
@@ -55,4 +55,33 @@ async function uploadAndTranslate(userId, file) {
   };
 }
 
-module.exports = { uploadAndTranslate };
+async function getHistory(userId, { page = 1, limit = 20 }) {
+  const skip = (page - 1) * limit;
+  const [rows, total] = await Promise.all([
+    prisma.upload.findMany({
+      where: { user_id: userId },
+      skip,
+      take: limit,
+      orderBy: { created_at: 'desc' },
+    }),
+    prisma.upload.count({ where: { user_id: userId } }),
+  ]);
+
+  const norm = (p) => p ? p.replace(/\\/g, '/') : null;
+
+  return {
+    items: rows.map((row) => ({
+      id: row.id,
+      imageUrl: norm(row.image_path),
+      translation: row.translation_result,
+      audioUrl: norm(row.audio_path),
+      createdAt: row.created_at,
+    })),
+    page,
+    limit,
+    total,
+    totalPages: Math.ceil(total / limit) || 0,
+  };
+}
+
+module.exports = { uploadAndTranslate, getHistory };

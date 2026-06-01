@@ -124,3 +124,43 @@ Content-Type: application/json
 ### POST {{baseUrl}}/translation/upload
 ### Authorization: Bearer <token>
 ### Body: form-data, key "image" (file)
+
+### Translation History (requires auth)
+GET {{baseUrl}}/translation/history?page=1&limit=20
+Authorization: Bearer {{authToken}}
+
+### --- AI Predict (via Backend Proxy — works on Railway too) ---
+POST http://localhost:3000/predict
+Content-Type: multipart/form-data; boundary=boundary
+
+--boundary
+Content-Disposition: form-data; name="file"; filename="test_sign.jpg"
+Content-Type: image/jpeg
+
+< ./ai_service/test_sign.jpg
+--boundary--
+
+### --- AI Predict via Railway Backend Proxy ---
+POST https://newproject-production-396a.up.railway.app/predict
+Content-Type: multipart/form-data; boundary=boundary
+
+--boundary
+Content-Disposition: form-data; name="file"; filename="test_sign.jpg"
+Content-Type: image/jpeg
+
+< ./ai_service/test_sign.jpg
+--boundary--
+
+### --- AI Direct Predict (Local Flask — bypasses Node.js) ---
+POST http://127.0.0.1:5000/predict
+Content-Type: multipart/form-data; boundary=boundary
+
+--boundary
+Content-Disposition: form-data; name="file"; filename="test_sign.jpg"
+Content-Type: image/jpeg
+
+< ./ai_service/test_sign.jpg
+--boundary--
+
+### --- AI Health Check (Local Flask) ---
+GET http://127.0.0.1:5000/health
