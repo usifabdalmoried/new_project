@@ -19,11 +19,34 @@ DEVICE       = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 # 36 classes: 0-9 then A-Z
 CLASS_LABELS = [str(i) for i in range(10)] + [chr(c) for c in range(ord('A'), ord('Z') + 1)]
 
+def download_weights_if_url(path_or_url):
+    if path_or_url.startswith(('http://', 'https://')):
+        local_filename = os.path.basename(path_or_url.split('?')[0])
+        if not local_filename.endswith(('.pth', '.zip', '.bin')):
+            local_filename = 'Model_weights.pth'
+        
+        local_path = os.path.join(os.getcwd(), local_filename)
+        
+        if os.path.exists(local_path):
+            print(f"[AI Service] Weights already downloaded at: {local_path}")
+            return local_path
+            
+        print(f"[AI Service] Downloading weights from {path_or_url} to {local_path}...")
+        import urllib.request
+        opener = urllib.request.build_opener()
+        opener.addheaders = [('User-agent', 'Mozilla/5.0')]
+        urllib.request.install_opener(opener)
+        urllib.request.urlretrieve(path_or_url, local_path)
+        print("[AI Service] Download complete!")
+        return local_path
+    return path_or_url
+
 # ── Load model once at startup ─────────────────────────────────────────────────
-print(f"[AI Service] Loading model from: {WEIGHTS_PATH}")
+resolved_weights_path = download_weights_if_url(WEIGHTS_PATH)
+print(f"[AI Service] Loading model from: {resolved_weights_path}")
 print(f"[AI Service] Using device: {DEVICE}")
 
-model = load_model(WEIGHTS_PATH)
+model = load_model(resolved_weights_path)
 model = model.to(DEVICE)
 model.eval()
 

@@ -29,6 +29,38 @@ function createApp() {
     res.status(200).json({ success: true, data: { status: 'ok', timestamp: new Date().toISOString() } });
   });
 
+  const { upload } = require('./config/upload');
+  const axios = require('axios');
+  const FormData = require('form-data');
+  const config = require('./config');
+
+  app.post('/predict', upload.single('file'), async (req, res) => {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded. Use key "file".' });
+    }
+
+    try {
+      const form = new FormData();
+      form.append('file', fs.createReadStream(req.file.path));
+
+      const aiResponse = await axios.post(config.aiModelUrl, form, {
+        headers: form.getHeaders(),
+        timeout: 30000,
+      });
+
+      // Async cleanup local temp file
+      fs.unlink(req.file.path, () => {});
+
+      return res.status(200).json(aiResponse.data);
+    } catch (aiError) {
+      if (req.file) {
+        fs.unlink(req.file.path, () => {});
+      }
+      console.error('[AI Proxy Error]:', aiError.message);
+      return res.status(500).json({ error: `AI Service unavailable: ${aiError.message}` });
+    }
+  });
+
   app.get('/', (_req, res) => {
     res.json({
       success: true,

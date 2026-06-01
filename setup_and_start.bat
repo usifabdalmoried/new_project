@@ -34,7 +34,7 @@ if %errorlevel% neq 0 (
 
 echo.
 :: Navigate to ai_service folder
-cd /d "%~dp0"
+cd /d "%~dp0ai_service"
 
 :: Verify if existing venv is working
 if exist "venv\" (
@@ -82,7 +82,7 @@ set "WEIGHTS_FILE=D:\Model_weights.pth"
 if not exist "%WEIGHTS_FILE%" (
     set "WEIGHTS_FILE=D:\Model_weights.pth.zip"
     if not exist "!WEIGHTS_FILE!" (
-        set "WEIGHTS_FILE=%~dp0Model_weights.pth"
+        set "WEIGHTS_FILE=%~dp0ai_service\Model_weights.pth"
         if not exist "!WEIGHTS_FILE!" (
             echo ====================================================
             echo [WARNING] Model weights file not found!
@@ -91,7 +91,7 @@ if not exist "%WEIGHTS_FILE%" (
             echo Please place your 'Model_weights.pth' file inside:
             echo 1. The D:\ drive (D:\Model_weights.pth)
             echo OR
-            echo 2. The ai_service folder (%~dp0Model_weights.pth)
+            echo 2. The ai_service folder (%~dp0ai_service\Model_weights.pth)
             echo ====================================================
             echo.
         )
@@ -100,8 +100,8 @@ if not exist "%WEIGHTS_FILE%" (
 
 :: Set environment variables
 set AI_PORT=5000
-if exist "%~dp0Model_weights.pth" (
-    set "MODEL_WEIGHTS_PATH=%~dp0Model_weights.pth"
+if exist "%~dp0ai_service\Model_weights.pth" (
+    set "MODEL_WEIGHTS_PATH=%~dp0ai_service\Model_weights.pth"
 ) else (
     set "MODEL_WEIGHTS_PATH=D:\Model_weights.pth"
 )
