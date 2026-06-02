@@ -11,7 +11,7 @@ from model import load_model
 # ── Configuration ──────────────────────────────────────────────────────────────
 WEIGHTS_PATH = os.environ.get(
     'MODEL_WEIGHTS_PATH',
-    r'D:\Model_weights.pth.zip'      # default path — override via env var
+    os.path.join(os.path.dirname(__file__), 'Model_weights.pth.zip')
 )
 NUM_CLASSES  = 36
 DEVICE       = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
