@@ -29,6 +29,14 @@ function createApp() {
     res.status(200).json({ success: true, data: { status: 'ok', timestamp: new Date().toISOString() } });
   });
 
+  app.get('/debug-config', (_req, res) => {
+    res.status(200).json({
+      aiModelUrl: config.aiModelUrl,
+      envAiModelUrl: process.env.AI_MODEL_URL,
+      hasDotenv: fs.existsSync(path.join(process.cwd(), '.env'))
+    });
+  });
+
   const { upload } = require('./config/upload');
   const axios = require('axios');
   const FormData = require('form-data');

@@ -44,7 +44,9 @@
 				{
 					"name": "Health Check",
 					"request": {
-						"auth": { "type": "noauth" },
+						"auth": {
+							"type": "noauth"
+						},
 						"method": "GET",
 						"header": [],
 						"url": {
@@ -609,7 +611,9 @@
 				{
 					"name": "15 - AI Health Check (via Backend)",
 					"request": {
-						"auth": { "type": "noauth" },
+						"auth": {
+							"type": "noauth"
+						},
 						"method": "GET",
 						"header": [],
 						"url": {
