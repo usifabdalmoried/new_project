@@ -2,7 +2,7 @@
 	"info": {
 		"_postman_id": "sign-language-api-v2",
 		"name": "🤟 Sign Language API v2 (Railway)",
-		"description": "Complete API collection for the Sign Language Translation Backend.\n\n---\n\n## 🚀 Deployment\n\n**Backend (Railway):** https://newproject-production-396a.up.railway.app\n\n**AI Service (Local):** http://127.0.0.1:5000 (run locally)\n\n**AI Service (Railway):** https://ai-service-production-xxx.up.railway.app (replace with your generated Railway domain)\n\n---\n\n## 📌 Variables\n\n| Variable | Local Value | Railway Value |\n|---|---|---|\n| `baseUrl` | http://localhost:3000/api | https://newproject-production-396a.up.railway.app/api |\n| `aiBaseUrl` | http://127.0.0.1:5000 | https://your-ai-service-domain.up.railway.app |\n| `authToken` | Auto-filled after Login | Auto-filled after Login |\n\n---\n\n## 📋 Steps\n1. Run **Register** to create account\n2. Run **Login** → Token saved automatically ✅\n3. Use any protected endpoint (Token added automatically)\n4. Test AI directly from **🤖 AI Service (Direct)** folder\n\n💡 *Tip: To switch between Local and Railway, just change the values of `baseUrl` and `aiBaseUrl` in the Collection Variables tab in Postman.*",
+		"description": "Complete API collection for the Sign Language Translation Backend.\n\n---\n\n## 🚀 Deployment\n\n**Backend (Railway):** https://newproject-porject-usif.up.railway.app\n\n**AI Service (Local):** http://127.0.0.1:5000 (run locally)\n\n**AI Service (Railway):** https://ai-service-production-xxx.up.railway.app (replace with your generated Railway domain)\n\n---\n\n## 📌 Variables\n\n| Variable | Local Value | Railway Value |\n|---|---|---|\n| `baseUrl` | http://localhost:3000/api | https://newproject-porject-usif.up.railway.app/api |\n| `aiBaseUrl` | http://127.0.0.1:5000 | https://your-ai-service-domain.up.railway.app |\n| `authToken` | Auto-filled after Login | Auto-filled after Login |\n\n---\n\n## 📋 Steps\n1. Run **Register** to create account\n2. Run **Login** → Token saved automatically ✅\n3. Use any protected endpoint (Token added automatically)\n4. Test AI directly from **🤖 AI Service (Direct)** folder\n\n💡 *Tip: To switch between Local and Railway, just change the values of `baseUrl` and `aiBaseUrl` in the Collection Variables tab in Postman.*",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"auth": {
@@ -18,12 +18,12 @@
 	"variable": [
 		{
 			"key": "baseUrl",
-			"value": "https://newproject-production-396a.up.railway.app/api",
+			"value": "https://newproject-porject-usif.up.railway.app/api",
 			"type": "string"
 		},
 		{
 			"key": "serverUrl",
-			"value": "https://newproject-production-396a.up.railway.app",
+			"value": "https://newproject-porject-usif.up.railway.app",
 			"type": "string"
 		},
 		{
