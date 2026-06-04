@@ -25,6 +25,11 @@ async function uploadAndTranslate(userId, file) {
     translationResult =
       aiResponse.data?.translation || aiResponse.data?.result || translationResult;
   } catch (aiError) {
+    // If AI returned 400 (low confidence / not a sign language image), pass that error to user
+    if (aiError.response && aiError.response.status === 400) {
+      const aiMsg = aiError.response.data?.error || "image doesn't include sign language character";
+      throw new AppError(aiMsg, 400);
+    }
     console.warn('AI model unavailable, using fallback translation:', aiError.message);
   }
 

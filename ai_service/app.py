@@ -3,7 +3,7 @@ import io
 import torch
 import torchvision.transforms as transforms
 from flask import Flask, request, jsonify
-from PIL import Image
+from PIL import Image, ImageOps
 
 # ── Import model from same directory ──────────────────────────────────────────
 from model import load_model
@@ -16,7 +16,7 @@ WEIGHTS_PATH = os.environ.get(
 NUM_CLASSES  = 36
 DEVICE       = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-# 36 classes: 0-9 then A-Z
+# 36 classes: 0-9 then A-Z (matches training data folder ordering)
 CLASS_LABELS = [str(i) for i in range(10)] + [chr(c) for c in range(ord('A'), ord('Z') + 1)]
 
 def download_weights_if_url(path_or_url):
@@ -52,12 +52,12 @@ model.eval()
 
 print("[AI Service] Model loaded successfully!")
 
-# ── Image preprocessing (must match training pipeline) ────────────────────────
+# -- Image preprocessing (must match training pipeline) ────────────────────────
+# NOTE: Model was trained with ToTensor() only (scales pixels to [0, 1]).
+#       Do NOT apply ImageNet normalization here.
 transform = transforms.Compose([
     transforms.Resize((64, 64)),
     transforms.ToTensor(),
-    transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                         std=[0.229, 0.224, 0.225]),
 ])
 
 # ── Flask app ──────────────────────────────────────────────────────────────────
@@ -86,7 +86,10 @@ def predict():
     try:
         # Read & preprocess image
         img_bytes = file.read()
-        image = Image.open(io.BytesIO(img_bytes)).convert('RGB')
+        image = Image.open(io.BytesIO(img_bytes))
+        # Fix EXIF rotation from mobile cameras
+        image = ImageOps.exif_transpose(image)
+        image = image.convert('RGB')
         tensor = transform(image).unsqueeze(0).to(DEVICE)   # [1, 3, 64, 64]
 
         # Inference
@@ -98,6 +101,14 @@ def predict():
         label      = CLASS_LABELS[predicted.item()]
         confidence = round(confidence.item(), 4)
 
+        THRESHOLD = 0.60  # Minimum Confidence
+
+        if confidence < THRESHOLD:
+            return jsonify({
+                'error': "image doesn't include sign language character",
+                'confidence': confidence
+            }), 400
+
         return jsonify({
             'translation': label,
             'result'     : label,
@@ -106,6 +117,59 @@ def predict():
 
     except Exception as e:
         return jsonify({'error': f'Prediction failed: {str(e)}'}), 500
+
+
+@app.route('/predict/debug', methods=['POST'])
+def predict_debug():
+    """
+    Debug endpoint: returns top-5 predictions with BOTH possible class orderings.
+    Use this to determine which ordering matches your actual sign.
+    """
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file uploaded. Use key "file".'}), 400
+
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({'error': 'Empty filename.'}), 400
+
+    try:
+        img_bytes = file.read()
+        image = Image.open(io.BytesIO(img_bytes))
+        image = ImageOps.exif_transpose(image)
+        image = image.convert('RGB')
+        original_size = image.size
+        tensor = transform(image).unsqueeze(0).to(DEVICE)
+
+        with torch.no_grad():
+            outputs = model(tensor)
+            probs = torch.softmax(outputs, dim=1)
+            top5 = torch.topk(probs, 5, dim=1)
+
+        labels_0_9_AZ = [str(i) for i in range(10)] + [chr(c) for c in range(ord('A'), ord('Z') + 1)]
+        labels_AZ_0_9 = [chr(c) for c in range(ord('A'), ord('Z') + 1)] + [str(i) for i in range(10)]
+
+        results = []
+        for j in range(5):
+            idx = top5.indices[0][j].item()
+            conf = round(top5.values[0][j].item(), 4)
+            results.append({
+                'rank': j + 1,
+                'class_index': idx,
+                'confidence': conf,
+                'label_if_0to9_AtoZ': labels_0_9_AZ[idx],
+                'label_if_AtoZ_0to9': labels_AZ_0_9[idx],
+            })
+
+        return jsonify({
+            'image_original_size': list(original_size),
+            'current_label': CLASS_LABELS[top5.indices[0][0].item()],
+            'current_confidence': round(top5.values[0][0].item(), 4),
+            'top5': results,
+            'note': 'Compare the sign you made with both label columns to find the correct ordering',
+        }), 200
+
+    except Exception as e:
+        return jsonify({'error': f'Debug prediction failed: {str(e)}'}), 500
 
 
 # ── Entry point ────────────────────────────────────────────────────────────────
