@@ -35,3 +35,10 @@ __pycache__/
 # Build output
 dist/
 build/
+
+# Large binary files
+VC_redist.x64.exe
+*.pth
+*.pth.zip
+*.h5
+*.onnx

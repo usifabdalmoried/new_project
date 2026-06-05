@@ -10,7 +10,7 @@ const defaultAiUrl = 'http://127.0.0.1:5000/predict';
 let aiModelUrl = process.env.AI_MODEL_URL || defaultAiUrl;
 
 if (isProduction && (aiModelUrl === defaultAiUrl || aiModelUrl.includes('127.0.0.1') || aiModelUrl.includes('localhost'))) {
-  aiModelUrl = 'https://newproject-porject-usif.up.railway.app/predict';
+  aiModelUrl = 'https://newproject-porject-usif.up.railway.app/predict'; // AI Flask service (separate Railway project)
 }
 
 module.exports = {
