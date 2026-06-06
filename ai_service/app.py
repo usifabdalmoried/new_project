@@ -9,10 +9,14 @@ from PIL import Image, ImageOps
 from model import load_model
 
 # ── Configuration ──────────────────────────────────────────────────────────────
-WEIGHTS_PATH = os.environ.get(
-    'MODEL_WEIGHTS_PATH',
-    os.path.join(os.path.dirname(__file__), 'Model_weights.pth.zip')
-)
+# Use collected_weights if it exists, otherwise fall back to Model_weights.pth.zip
+collected_weights_path = os.path.join(os.path.dirname(__file__), 'collected_weights')
+if os.path.exists(collected_weights_path):
+    DEFAULT_WEIGHTS = collected_weights_path
+else:
+    DEFAULT_WEIGHTS = os.path.join(os.path.dirname(__file__), 'Model_weights.pth.zip')
+
+WEIGHTS_PATH = os.environ.get('MODEL_WEIGHTS_PATH', DEFAULT_WEIGHTS)
 NUM_CLASSES  = 36
 DEVICE       = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
