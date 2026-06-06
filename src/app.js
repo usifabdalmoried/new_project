@@ -59,6 +59,12 @@ function createApp() {
         fs.unlink(req.file.path, () => {});
       }
       console.error('[AI Proxy Error]:', aiError.message);
+
+      // Forward AI service 400 errors (e.g. low confidence) as-is
+      if (aiError.response && aiError.response.status === 400) {
+        return res.status(400).json(aiError.response.data);
+      }
+
       return res.status(500).json({ error: `AI Service unavailable: ${aiError.message}` });
     }
   });
