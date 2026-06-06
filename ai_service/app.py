@@ -101,7 +101,7 @@ def predict():
         label      = CLASS_LABELS[predicted.item()]
         confidence = round(confidence.item(), 4)
 
-        THRESHOLD = 0.60  # Minimum Confidence
+        THRESHOLD = 0.70  # Minimum Confidence
 
         if confidence < THRESHOLD:
             return jsonify({
