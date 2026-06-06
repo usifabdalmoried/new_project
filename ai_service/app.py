@@ -50,6 +50,9 @@ resolved_weights_path = download_weights_if_url(WEIGHTS_PATH)
 print(f"[AI Service] Loading model from: {resolved_weights_path}")
 print(f"[AI Service] Using device: {DEVICE}")
 
+# PyTorch saved directory models can sometimes be loaded directly, but on some platforms,
+# torch.load requires the file path or directory path depending on format.
+# Let's ensure it is loaded correctly by model.py
 model = load_model(resolved_weights_path)
 model = model.to(DEVICE)
 model.eval()
