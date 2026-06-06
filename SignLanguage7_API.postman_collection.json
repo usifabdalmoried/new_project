@@ -33,7 +33,7 @@
 		},
 		{
 			"key": "aiBaseUrl",
-			"value": "http://127.0.0.1:5000",
+			"value": "https://newproject-porject-usif.up.railway.app",
 			"type": "string"
 		}
 	],
@@ -665,7 +665,7 @@
 					"response": []
 				},
 				{
-					"name": "17 - AI Direct Predict (Local Flask)",
+					"name": "17 - AI Direct Predict (Railway Flask)",
 					"request": {
 						"method": "POST",
 						"header": [],
@@ -681,43 +681,33 @@
 							]
 						},
 						"url": {
-							"raw": "http://127.0.0.1:5000/predict",
-							"protocol": "http",
+							"raw": "{{aiBaseUrl}}/predict",
 							"host": [
-								"127",
-								"0",
-								"0",
-								"1"
+								"{{aiBaseUrl}}"
 							],
-							"port": "5000",
 							"path": [
 								"predict"
 							]
 						},
-						"description": "Send an image **directly** to the local Flask AI service (bypassing Node.js backend).\n\n⚠️ Requires Flask AI running locally: `cd ai_service && python app.py`\n\n**Steps:**\n1. Body → form-data\n2. Key: `file` → change type to **File**\n3. Select a sign language image\n4. Send!\n\n✅ Expected Response (200):\n```json\n{\n  \"translation\": \"A\",\n  \"result\": \"A\",\n  \"confidence\": 0.9876\n}\n```"
+						"description": "Send an image **directly** to the Railway Flask AI service (bypassing Node.js backend).\n\n**Steps:**\n1. Body → form-data\n2. Key: `file` → change type to **File**\n3. Select a sign language image\n4. Send!\n\n✅ Expected Response (200):\n```json\n{\n  \"translation\": \"A\",\n  \"result\": \"A\",\n  \"confidence\": 0.9876\n}\n```"
 					},
 					"response": []
 				},
 				{
-					"name": "18 - AI Health Check (Local Flask)",
+					"name": "18 - AI Health Check (Railway Flask)",
 					"request": {
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "http://127.0.0.1:5000/health",
-							"protocol": "http",
+							"raw": "{{aiBaseUrl}}/health",
 							"host": [
-								"127",
-								"0",
-								"0",
-								"1"
+								"{{aiBaseUrl}}"
 							],
-							"port": "5000",
 							"path": [
 								"health"
 							]
 						},
-						"description": "Check if the local Python Flask AI Service is running.\n\n⚠️ Run first: `cd ai_service && python app.py`\n\n✅ Expected Response (200):\n```json\n{\"status\": \"ok\", \"device\": \"cpu\"}\n```"
+						"description": "Check if the Railway Flask AI Service is running.\n\n✅ Expected Response (200):\n```json\n{\"status\": \"ok\", \"device\": \"cpu\"}\n```"
 					},
 					"response": []
 				}
