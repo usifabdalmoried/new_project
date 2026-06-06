@@ -51,12 +51,12 @@ function createApp() {
       });
 
       // Async cleanup local temp file
-      fs.unlink(req.file.path, () => {});
+      fs.unlink(req.file.path, () => { });
 
       return res.status(200).json(aiResponse.data);
     } catch (aiError) {
       if (req.file) {
-        fs.unlink(req.file.path, () => {});
+        fs.unlink(req.file.path, () => { });
       }
       console.error('[AI Proxy Error]:', aiError.message);
 
