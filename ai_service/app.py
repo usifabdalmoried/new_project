@@ -1,19 +1,23 @@
 import os
 import io
+import threading
 import torch
 from flask import Flask, request, jsonify
 from PIL import Image, ImageOps
-import cv2
-import mediapipe as mp
 import numpy as np
 
-# Initialize MediaPipe Hands module reference (instantiated per-request to save memory and avoid crashes)
-mp_hands = mp.solutions.hands
+IS_RAILWAY = bool(os.environ.get('RAILWAY_ENVIRONMENT'))
+DISABLE_MEDIAPIPE = os.environ.get(
+    'DISABLE_MEDIAPIPE',
+    'true' if IS_RAILWAY else 'false',
+).lower() == 'true'
 
 def preprocess_image_or_hand(image):
-    if os.environ.get('DISABLE_MEDIAPIPE', 'false').lower() == 'true':
-        print("[AI Service] MediaPipe is disabled via environment variable.")
+    if DISABLE_MEDIAPIPE:
         return image, False
+
+    import mediapipe as mp
+    mp_hands = mp.solutions.hands
 
     cv_img = np.array(image)
     h, w, _ = cv_img.shape
@@ -48,7 +52,6 @@ def preprocess_image_or_hand(image):
                         hand_detected = True
     except Exception as mp_err:
         print(f"[AI Service] MediaPipe processing failed/crushed: {mp_err}")
-        # Safely fall back to the original image
         hand_detected = False
                 
     return image, hand_detected
@@ -57,7 +60,6 @@ def preprocess_image_or_hand(image):
 from model import load_model
 
 # ── Configuration ──────────────────────────────────────────────────────────────
-# Use collected_weights if it exists, otherwise fall back to Model_weights.pth.zip
 collected_weights_path = os.path.join(os.path.dirname(__file__), 'collected_weights')
 if os.path.exists(collected_weights_path):
     DEFAULT_WEIGHTS = collected_weights_path
@@ -68,7 +70,6 @@ WEIGHTS_PATH = os.environ.get('MODEL_WEIGHTS_PATH', DEFAULT_WEIGHTS)
 NUM_CLASSES  = 36
 DEVICE       = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-# 36 classes: 0-9 then A-Z (matches training data folder ordering)
 CLASS_LABELS = [str(i) for i in range(10)] + [chr(c) for c in range(ord('A'), ord('Z') + 1)]
 
 def download_weights_if_url(path_or_url):
@@ -93,50 +94,56 @@ def download_weights_if_url(path_or_url):
         return local_path
     return path_or_url
 
-# ── Load model once at startup ─────────────────────────────────────────────────
-resolved_weights_path = download_weights_if_url(WEIGHTS_PATH)
-print(f"[AI Service] Loading model from: {resolved_weights_path}")
-print(f"[AI Service] Using device: {DEVICE}")
+# ── Load model in background so Flask binds to PORT before Railway health checks ──
+model = None
+model_error = None
+model_ready = threading.Event()
 
-# PyTorch saved directory models can sometimes be loaded directly, but on some platforms,
-# torch.load requires the file path or directory path depending on format.
-# Let's ensure it is loaded correctly by model.py
-model = load_model(resolved_weights_path)
-model = model.to(DEVICE)
-model.eval()
+def load_model_background():
+    global model, model_error
+    try:
+        resolved_weights_path = download_weights_if_url(WEIGHTS_PATH)
+        print(f"[AI Service] Loading model from: {resolved_weights_path}")
+        print(f"[AI Service] Using device: {DEVICE}")
+        loaded = load_model(resolved_weights_path)
+        loaded = loaded.to(DEVICE)
+        loaded.eval()
+        model = loaded
+        print("[AI Service] Model loaded successfully!")
+    except Exception as err:
+        model_error = str(err)
+        print(f"[AI Service] Model load failed: {model_error}")
+    finally:
+        model_ready.set()
 
-print("[AI Service] Model loaded successfully!")
-
-# -- Image preprocessing (must match training pipeline) ────────────────────────
-# NOTE: Model was trained with ToTensor() only (scales pixels to [0, 1]).
-#       Do NOT apply ImageNet normalization here.
 def transform_image(img):
-    # Resize PIL Image to 64x64
     img_resized = img.resize((64, 64))
-    # Convert PIL Image to float numpy array and scale to [0, 1]
     arr = np.array(img_resized, dtype=np.float32) / 255.0
-    # Transpose from (H, W, C) to (C, H, W)
     arr = np.transpose(arr, (2, 0, 1))
-    # Convert to PyTorch tensor
-    tensor = torch.from_numpy(arr)
-    return tensor
+    return torch.from_numpy(arr)
 
-# ── Flask app ──────────────────────────────────────────────────────────────────
 app = Flask(__name__)
 
 
 @app.route('/health', methods=['GET'])
 def health():
-    """Health check endpoint."""
+    if model_error:
+        return jsonify({'status': 'error', 'error': model_error, 'device': str(DEVICE)}), 503
+    if not model_ready.is_set():
+        return jsonify({'status': 'loading', 'device': str(DEVICE)}), 200
     return jsonify({'status': 'ok', 'device': str(DEVICE)}), 200
+
+
+def _require_model():
+    if model_error:
+        return jsonify({'error': f'Model failed to load: {model_error}'}), 503
+    if not model_ready.is_set():
+        return jsonify({'error': 'Model is still loading, retry shortly.'}), 503
+    return None
 
 
 @app.route('/predict', methods=['POST'])
 def predict():
-    """
-    Accepts a multipart/form-data POST with key 'file' (image).
-    Returns JSON: { "translation": "A", "confidence": 0.98, "result": "A" }
-    """
     if 'file' not in request.files:
         return jsonify({'error': 'No file uploaded. Use key "file".'}), 400
 
@@ -144,33 +151,31 @@ def predict():
     if file.filename == '':
         return jsonify({'error': 'Empty filename.'}), 400
 
+    not_ready = _require_model()
+    if not_ready:
+        return not_ready
+
     try:
-        # Read & preprocess image
         img_bytes = file.read()
         image = Image.open(io.BytesIO(img_bytes))
-        # Fix EXIF rotation from mobile cameras
         image = ImageOps.exif_transpose(image)
         image = image.convert('RGB')
-
-        # Detect and crop hand region
         image, hand_detected = preprocess_image_or_hand(image)
         
-        tensor = transform_image(image).unsqueeze(0).to(DEVICE)   # [1, 3, 64, 64]
+        tensor = transform_image(image).unsqueeze(0).to(DEVICE)
 
-        # Inference
         with torch.no_grad():
-            outputs    = model(tensor)                        # [1, 36]
+            outputs    = model(tensor)
             probs      = torch.softmax(outputs, dim=1)
             confidence, predicted = torch.max(probs, dim=1)
 
         label      = CLASS_LABELS[predicted.item()]
         confidence = round(confidence.item(), 4)
 
-        # Digit adjustment mapping (matches get_top_k_classes digit offset logic)
         if label.isdigit():
             label = str(int(label) - 1)
 
-        THRESHOLD = 0.50  # Lower threshold because hand is pre-cropped, making predictions cleaner
+        THRESHOLD = 0.50
 
         if confidence < THRESHOLD:
             return jsonify({
@@ -191,10 +196,6 @@ def predict():
 
 @app.route('/predict/debug', methods=['POST'])
 def predict_debug():
-    """
-    Debug endpoint: returns top-5 predictions with BOTH possible class orderings.
-    Use this to determine which ordering matches your actual sign.
-    """
     if 'file' not in request.files:
         return jsonify({'error': 'No file uploaded. Use key "file".'}), 400
 
@@ -202,14 +203,16 @@ def predict_debug():
     if file.filename == '':
         return jsonify({'error': 'Empty filename.'}), 400
 
+    not_ready = _require_model()
+    if not_ready:
+        return not_ready
+
     try:
         img_bytes = file.read()
         image = Image.open(io.BytesIO(img_bytes))
         image = ImageOps.exif_transpose(image)
         image = image.convert('RGB')
         original_size = image.size
-        
-        # Detect and crop hand region
         image, hand_detected = preprocess_image_or_hand(image)
         
         tensor = transform_image(image).unsqueeze(0).to(DEVICE)
@@ -247,7 +250,8 @@ def predict_debug():
         return jsonify({'error': f'Debug prediction failed: {str(e)}'}), 500
 
 
-# ── Entry point ────────────────────────────────────────────────────────────────
 if __name__ == '__main__':
+    print(f"[AI Service] Railway mode: {IS_RAILWAY}, MediaPipe disabled: {DISABLE_MEDIAPIPE}")
+    threading.Thread(target=load_model_background, daemon=True).start()
     port = int(os.environ.get('PORT', os.environ.get('AI_PORT', 5000)))
     app.run(host='0.0.0.0', port=port, debug=False)
