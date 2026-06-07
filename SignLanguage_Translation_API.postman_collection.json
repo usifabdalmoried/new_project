@@ -18,12 +18,12 @@
 	"variable": [
 		{
 			"key": "baseUrl",
-			"value": "http://localhost:3000/api",
+			"value": "https://newproject-production-396a.up.railway.app/api",
 			"type": "string"
 		},
 		{
 			"key": "serverUrl",
-			"value": "http://localhost:3000",
+			"value": "https://newproject-production-396a.up.railway.app",
 			"type": "string"
 		},
 		{
@@ -33,7 +33,7 @@
 		},
 		{
 			"key": "aiBaseUrl",
-			"value": "http://127.0.0.1:5000",
+			"value": "https://newproject-porject-usif.up.railway.app",
 			"type": "string"
 		}
 	],
