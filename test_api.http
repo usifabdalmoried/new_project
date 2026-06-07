@@ -141,7 +141,7 @@ Content-Type: image/jpeg
 --boundary--
 
 ### --- AI Predict via Railway Backend Proxy ---
-POST https://newproject-porject-usif.up.railway.app/predict
+POST https://backend-porject-usif.up.railway.app/predict
 Content-Type: multipart/form-data; boundary=boundary
 
 --boundary
