@@ -1,3 +1,0 @@
-[phases.setup]
-nixPkgs = ["...", "libGL", "mesa", "glib"]
-nixLibs = ["...", "libGL", "mesa", "glib"]
