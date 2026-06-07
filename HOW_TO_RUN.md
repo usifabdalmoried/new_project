@@ -90,7 +90,7 @@ python app.py
 ## 🚀 ثالثاً: النشر على Railway (Production)
 
 الـ Backend والـ AI مربوطين ومنشورين بالفعل على Railway:
-* **رابط الـ API الأساسي (Node.js):** `https://newproject-production-396a.up.railway.app`
+* **رابط الـ API الأساسي (Node.js):** `https://newproject-porject-usif.up.railway.app`
 
 ### لدفع أي تعديلات جديدة للـ Production:
 ```bash
@@ -110,7 +110,7 @@ git push origin usif-1
 
 ### في بيئة الإنتاج (Production):
 استخدم رابط الـ Railway مباشرة:
-`https://newproject-production-396a.up.railway.app/api`
+`https://newproject-porject-usif.up.railway.app/api`
 
 ---
 
