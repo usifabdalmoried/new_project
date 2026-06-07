@@ -8,40 +8,49 @@ import cv2
 import mediapipe as mp
 import numpy as np
 
-# Initialize MediaPipe Hands for static crop
+# Initialize MediaPipe Hands module reference (instantiated per-request to save memory and avoid crashes)
 mp_hands = mp.solutions.hands
-hands = mp_hands.Hands(
-    static_image_mode=True,
-    max_num_hands=1,
-    min_detection_confidence=0.5
-)
 
 def preprocess_image_or_hand(image):
+    if os.environ.get('DISABLE_MEDIAPIPE', 'false').lower() == 'true':
+        print("[AI Service] MediaPipe is disabled via environment variable.")
+        return image, False
+
     cv_img = np.array(image)
     h, w, _ = cv_img.shape
     
-    # Convert RGB for mediapipe
-    results = hands.process(cv_img)
-    
     hand_detected = False
-    if results.multi_hand_landmarks:
-        landmarks = results.multi_hand_landmarks[0]
-        lms = landmarks.landmark
-        x_coords = [lm.x for lm in lms]
-        y_coords = [lm.y for lm in lms]
+    try:
+        # Create hands instance inside request and close it to free C++ memory immediately
+        with mp_hands.Hands(
+            static_image_mode=True,
+            max_num_hands=1,
+            min_detection_confidence=0.5
+        ) as hands_detector:
+            results = hands_detector.process(cv_img)
+            
+            if results.multi_hand_landmarks:
+                landmarks = results.multi_hand_landmarks[0]
+                lms = landmarks.landmark
+                x_coords = [lm.x for lm in lms]
+                y_coords = [lm.y for lm in lms]
 
-        x_min, x_max = int(min(x_coords) * w), int(max(x_coords) * w)
-        y_min, y_max = int(min(y_coords) * h), int(max(y_coords) * h)
+                x_min, x_max = int(min(x_coords) * w), int(max(x_coords) * w)
+                y_min, y_max = int(min(y_coords) * h), int(max(y_coords) * h)
 
-        padding = 20
-        x_min, x_max = max(0, x_min - padding), min(w, x_max + padding)
-        y_min, y_max = max(0, y_min - padding), min(h, y_max + padding)
+                padding = 20
+                x_min, x_max = max(0, x_min - padding), min(w, x_max + padding)
+                y_min, y_max = max(0, y_min - padding), min(h, y_max + padding)
 
-        if x_max > x_min and y_max > y_min:
-            hand_region = cv_img[y_min:y_max, x_min:x_max]
-            if hand_region.size > 0:
-                image = Image.fromarray(hand_region)
-                hand_detected = True
+                if x_max > x_min and y_max > y_min:
+                    hand_region = cv_img[y_min:y_max, x_min:x_max]
+                    if hand_region.size > 0:
+                        image = Image.fromarray(hand_region)
+                        hand_detected = True
+    except Exception as mp_err:
+        print(f"[AI Service] MediaPipe processing failed/crushed: {mp_err}")
+        # Safely fall back to the original image
+        hand_detected = False
                 
     return image, hand_detected
 
