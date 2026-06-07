@@ -62,31 +62,39 @@ def load_torch_model(num_classes=36):
 
 
 def load_model(saved_weights, num_classes=36):
-    """Load CustomCNN with saved weights."""
+    """Load CustomCNN with saved weights (.pth, .zip, directory, or checkpoint)."""
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    model  = load_torch_model(num_classes=num_classes)
-    
+    model = load_torch_model(num_classes=num_classes)
+
     import os
     import zipfile
     import io
 
+    def _extract_state_dict(loaded):
+        if isinstance(loaded, dict):
+            for key in ('state_dict', 'model_state_dict', 'model'):
+                if key in loaded and isinstance(loaded[key], dict):
+                    return loaded[key]
+            return loaded
+        if hasattr(loaded, 'state_dict'):
+            return loaded.state_dict()
+        raise ValueError('Unsupported weights format')
+
     if os.path.isdir(saved_weights):
-        # If it's a directory (unpacked PyTorch v2 zip format), we can zip it in-memory
-        # PyTorch expects all files to be inside a parent folder inside the zip archive (e.g., "archive/data.pkl").
         memory_zip = io.BytesIO()
         with zipfile.ZipFile(memory_zip, 'w', zipfile.ZIP_DEFLATED) as zf:
             for root, dirs, files in os.walk(saved_weights):
                 for file in files:
                     full_path = os.path.join(root, file)
                     relative_path = os.path.relpath(full_path, saved_weights)
-                    # Prepend "archive/" or dummy top-level dir
                     archive_path = os.path.join("archive", relative_path).replace("\\", "/")
                     zf.write(full_path, archive_path)
         memory_zip.seek(0)
-        state_dict = torch.load(memory_zip, map_location=device, weights_only=True)
+        raw = torch.load(memory_zip, map_location=device, weights_only=False)
     else:
-        state_dict = torch.load(saved_weights, map_location=device, weights_only=True)
-        
+        raw = torch.load(saved_weights, map_location=device, weights_only=False)
+
+    state_dict = _extract_state_dict(raw)
     model.load_state_dict(state_dict)
     model.to(device)
     model.eval()
