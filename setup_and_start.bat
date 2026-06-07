@@ -100,7 +100,9 @@ if not exist "%WEIGHTS_FILE%" (
 
 :: Set environment variables
 set AI_PORT=5000
-if exist "%~dp0ai_service\Model_weights.pth" (
+if exist "%~dp0ai_service\Model_weights.pth.zip" (
+    set "MODEL_WEIGHTS_PATH=%~dp0ai_service\Model_weights.pth.zip"
+) else if exist "%~dp0ai_service\Model_weights.pth" (
     set "MODEL_WEIGHTS_PATH=%~dp0ai_service\Model_weights.pth"
 ) else (
     set "MODEL_WEIGHTS_PATH=D:\Model_weights.pth"

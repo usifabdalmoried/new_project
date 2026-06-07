@@ -40,3 +40,8 @@ build/
 VC_redist.x64.exe
 *.h5
 *.onnx
+
+# Local DB and AI cached weights
+*.db
+collected_weights/
+start_local.bat

@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Signify AI - Sign Language Translator</title>
+  <!-- Google Fonts: Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Main Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Ambient Gradient Background Shapes -->
+  <div class="ambient-glow glow-1"></div>
+  <div class="ambient-glow glow-2"></div>
+
+  <!-- Main Container -->
+  <div class="app-container">
+    
+    <!-- Top Header -->
+    <header class="main-header">
+      <div class="logo-area">
+        <div class="logo-icon">
+          <i data-lucide="hand"></i>
+        </div>
+        <div class="logo-text">
+          <h1>Signify <span>AI</span></h1>
+          <p>Real-time Sign Language Translation</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <div id="system-status" class="status-indicator">
+          <span class="dot"></span>
+          <span class="status-text">Checking API...</span>
+        </div>
+        <div id="user-profile-header" class="user-pill hidden">
+          <span class="user-avatar" id="avatar-char">U</span>
+          <span class="user-name" id="header-username">User</span>
+          <button id="logout-btn" title="Log Out" class="icon-btn">
+            <i data-lucide="log-out"></i>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Content Sections -->
+    <main class="main-content">
+      
+      <!-- Authentication Screen (Shown by default if not logged in) -->
+      <section id="auth-section" class="auth-card glass-panel">
+        <div class="auth-tabs">
+          <button id="tab-login" class="auth-tab active">Log In</button>
+          <button id="tab-register" class="auth-tab">Register</button>
+        </div>
+
+        <!-- Login Form -->
+        <form id="login-form" class="auth-form">
+          <div class="form-group">
+            <label for="login-email">Email Address</label>
+            <div class="input-wrapper">
+              <i data-lucide="mail"></i>
+              <input type="email" id="login-email" placeholder="you@example.com" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="login-password">Password</label>
+            <div class="input-wrapper">
+              <i data-lucide="lock"></i>
+              <input type="password" id="login-password" placeholder="••••••••" required>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block">
+            <span>Access Platform</span>
+            <i data-lucide="arrow-right"></i>
+          </button>
+        </form>
+
+        <!-- Register Form (Hidden by default) -->
+        <form id="register-form" class="auth-form hidden">
+          <div class="form-group">
+            <label for="register-name">Full Name</label>
+            <div class="input-wrapper">
+              <i data-lucide="user"></i>
+              <input type="text" id="register-name" placeholder="John Doe" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="register-email">Email Address</label>
+            <div class="input-wrapper">
+              <i data-lucide="mail"></i>
+              <input type="email" id="register-email" placeholder="you@example.com" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="register-password">Password</label>
+            <div class="input-wrapper">
+              <i data-lucide="lock"></i>
+              <input type="password" id="register-password" placeholder="Min. 8 characters" required minlength="8">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="register-confirm">Confirm Password</label>
+            <div class="input-wrapper">
+              <i data-lucide="lock"></i>
+              <input type="password" id="register-confirm" placeholder="Repeat password" required>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block">
+            <span>Create Account</span>
+            <i data-lucide="user-plus"></i>
+          </button>
+        </form>
+        
+        <div id="auth-message" class="alert-box hidden"></div>
+      </section>
+
+      <!-- Main Translation & History Area (Hidden until logged in) -->
+      <div id="dashboard-section" class="dashboard-grid hidden">
+        
+        <!-- Left: Upload & Predict Controls -->
+        <div class="dashboard-column">
+          
+          <div class="card glass-panel upload-card">
+            <div class="card-header">
+              <i data-lucide="camera" class="header-icon"></i>
+              <h3>Translate Gesture</h3>
+            </div>
+            
+            <!-- Upload Drop Zone -->
+            <div id="drop-zone" class="drop-zone">
+              <input type="file" id="image-file-input" accept="image/*" class="hidden">
+              <div class="drop-zone-content">
+                <i data-lucide="upload-cloud" class="upload-icon"></i>
+                <p class="primary-text">Drag & drop your gesture image here</p>
+                <p class="secondary-text">or click to browse from files</p>
+                <span class="file-limits">Supports JPEG, PNG up to 10MB</span>
+              </div>
+              <!-- Preview Container -->
+              <div id="preview-container" class="preview-container hidden">
+                <img id="image-preview" src="" alt="Selected gesture">
+                <button id="clear-image-btn" class="clear-btn" type="button" title="Clear image">
+                  <i data-lucide="x"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Translate Button -->
+            <button id="translate-btn" class="btn btn-accent btn-block" disabled>
+              <i data-lucide="cpu"></i>
+              <span>Translate Image</span>
+            </button>
+          </div>
+
+          <!-- Live Translation Output Card -->
+          <div id="result-card" class="card glass-panel result-card hidden">
+            <div class="card-header">
+              <i data-lucide="sparkles" class="header-icon accent"></i>
+              <h3>Translation Output</h3>
+            </div>
+            
+            <div class="result-layout">
+              <div class="translation-result-display">
+                <span class="result-label">Translated Text</span>
+                <h2 id="result-text">-</h2>
+                <div class="confidence-pill">
+                  <i data-lucide="shield-check"></i>
+                  <span id="result-confidence">0% Confidence</span>
+                </div>
+              </div>
+
+              <div class="tts-controls">
+                <span class="section-sub">Audio Speech (TTS)</span>
+                <button id="play-audio-btn" class="audio-play-btn" title="Play audio">
+                  <i data-lucide="play"></i>
+                  <span>Listen Translation</span>
+                </button>
+                <audio id="global-audio-player" class="hidden"></audio>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Right: Translation History Log -->
+        <div class="dashboard-column">
+          <div class="card glass-panel history-card">
+            <div class="card-header space-between">
+              <div class="header-title">
+                <i data-lucide="history" class="header-icon"></i>
+                <h3>Translation History</h3>
+              </div>
+              <span class="badge" id="history-count">0 items</span>
+            </div>
+
+            <!-- History List container -->
+            <div class="history-list" id="history-list-container">
+              <!-- Placeholder for loading or empty history -->
+              <div class="history-placeholder" id="history-placeholder">
+                <i data-lucide="folder-open"></i>
+                <p>No translation records found</p>
+                <span>Upload gesture images to view history</span>
+              </div>
+            </div>
+            
+            <!-- Pagination Controls -->
+            <div id="pagination-controls" class="pagination-bar hidden">
+              <button id="prev-page-btn" class="btn btn-sm btn-secondary"><i data-lucide="chevron-left"></i></button>
+              <span id="page-indicator">Page 1 of 1</span>
+              <button id="next-page-btn" class="btn btn-sm btn-secondary"><i data-lucide="chevron-right"></i></button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="main-footer">
+      <p>&copy; 2026 Signify AI. Empowering communication through machine learning.</p>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    // Initialize Lucide Icons
+    lucide.createIcons();
+  </script>
+</body>
+</html>

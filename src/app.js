@@ -15,12 +15,16 @@ function createApp() {
   }
 
   app.disable('x-powered-by');
-  app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
+  app.use(helmet({ 
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+    contentSecurityPolicy: false
+  }));
   app.use(compression());
   app.use(buildCors());
   app.use(express.json({ limit: '1mb' }));
   app.use(express.urlencoded({ extended: false }));
 
+  app.use(express.static(path.join(process.cwd(), 'public')));
   app.use('/uploads', express.static(uploadsDir));
 
   app.use(apiLimiter);
