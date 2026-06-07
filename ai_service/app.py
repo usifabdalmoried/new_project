@@ -1,75 +1,26 @@
 import os
 import io
-import threading
 import torch
+import torchvision.transforms as transforms
 from flask import Flask, request, jsonify
-from PIL import Image, ImageOps
+from PIL import Image
 import numpy as np
 
-IS_RAILWAY = bool(os.environ.get('RAILWAY_ENVIRONMENT'))
-DISABLE_MEDIAPIPE = os.environ.get(
-    'DISABLE_MEDIAPIPE',
-    'true' if IS_RAILWAY else 'false',
-).lower() == 'true'
-
-def preprocess_image_or_hand(image):
-    if DISABLE_MEDIAPIPE:
-        return image, False
-
-    import mediapipe as mp
-    mp_hands = mp.solutions.hands
-
-    cv_img = np.array(image)
-    h, w, _ = cv_img.shape
-    
-    hand_detected = False
-    try:
-        # Create hands instance inside request and close it to free C++ memory immediately
-        with mp_hands.Hands(
-            static_image_mode=True,
-            max_num_hands=1,
-            min_detection_confidence=0.5
-        ) as hands_detector:
-            results = hands_detector.process(cv_img)
-            
-            if results.multi_hand_landmarks:
-                landmarks = results.multi_hand_landmarks[0]
-                lms = landmarks.landmark
-                x_coords = [lm.x for lm in lms]
-                y_coords = [lm.y for lm in lms]
-
-                x_min, x_max = int(min(x_coords) * w), int(max(x_coords) * w)
-                y_min, y_max = int(min(y_coords) * h), int(max(y_coords) * h)
-
-                padding = 20
-                x_min, x_max = max(0, x_min - padding), min(w, x_max + padding)
-                y_min, y_max = max(0, y_min - padding), min(h, y_max + padding)
-
-                if x_max > x_min and y_max > y_min:
-                    hand_region = cv_img[y_min:y_max, x_min:x_max]
-                    if hand_region.size > 0:
-                        image = Image.fromarray(hand_region)
-                        hand_detected = True
-    except Exception as mp_err:
-        print(f"[AI Service] MediaPipe processing failed/crushed: {mp_err}")
-        hand_detected = False
-                
-    return image, hand_detected
+# Install via: pip install mediapipe
+import mediapipe as mp 
 
 # ── Import model from same directory ──────────────────────────────────────────
 from model import load_model
 
 # ── Configuration ──────────────────────────────────────────────────────────────
-collected_weights_path = os.path.join(os.path.dirname(__file__), 'collected_weights')
-if os.path.exists(collected_weights_path):
-    DEFAULT_WEIGHTS = collected_weights_path
-else:
-    DEFAULT_WEIGHTS = os.path.join(os.path.dirname(__file__), 'Model_weights.pth.zip')
-
-WEIGHTS_PATH = os.environ.get('MODEL_WEIGHTS_PATH', DEFAULT_WEIGHTS)
+WEIGHTS_PATH = os.environ.get(
+    'MODEL_WEIGHTS_PATH',
+    os.path.join(os.path.dirname(__file__), 'Model_weights.pth.zip')
+)
 NUM_CLASSES  = 36
 DEVICE       = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
+# 36 classes: 0-9 then A-Z
 CLASS_LABELS = [str(i) for i in range(10)] + [chr(c) for c in range(ord('A'), ord('Z') + 1)]
 
 def download_weights_if_url(path_or_url):
@@ -94,56 +45,52 @@ def download_weights_if_url(path_or_url):
         return local_path
     return path_or_url
 
-# ── Load model in background so Flask binds to PORT before Railway health checks ──
-model = None
-model_error = None
-model_ready = threading.Event()
+# ── Load models once at startup ────────────────────────────────────────────────
+resolved_weights_path = download_weights_if_url(WEIGHTS_PATH)
+print(f"[AI Service] Loading classifier model from: {resolved_weights_path}")
+print(f"[AI Service] Using device: {DEVICE}")
 
-def load_model_background():
-    global model, model_error
-    try:
-        resolved_weights_path = download_weights_if_url(WEIGHTS_PATH)
-        print(f"[AI Service] Loading model from: {resolved_weights_path}")
-        print(f"[AI Service] Using device: {DEVICE}")
-        loaded = load_model(resolved_weights_path)
-        loaded = loaded.to(DEVICE)
-        loaded.eval()
-        model = loaded
-        print("[AI Service] Model loaded successfully!")
-    except Exception as err:
-        model_error = str(err)
-        print(f"[AI Service] Model load failed: {model_error}")
-    finally:
-        model_ready.set()
+# 1. Load Stage 2 Classifier
+model = load_model(resolved_weights_path)
+model = model.to(DEVICE)
+model.eval()
+print("[AI Service] Classifier model loaded successfully!")
 
-def transform_image(img):
-    img_resized = img.resize((64, 64))
-    arr = np.array(img_resized, dtype=np.float32) / 255.0
-    arr = np.transpose(arr, (2, 0, 1))
-    return torch.from_numpy(arr)
+# 2. Initialize Stage 1 MediaPipe Detector
+print("[AI Service] Initializing MediaPipe Hands detector...")
+mp_hands = mp.solutions.hands
+hands_detector = mp_hands.Hands(
+    static_image_mode=True, 
+    max_num_hands=1, 
+    min_detection_confidence=0.5
+)
+print("[AI Service] MediaPipe Hands detector ready!")
 
+# ── Image preprocessing (must match training pipeline) ────────────────────────
+# Note: Update to (128, 128) if you switch to your clean 4.56 GB dataset!
+transform = transforms.Compose([
+    transforms.Resize((64, 64)), 
+    transforms.ToTensor(),
+    transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                         std=[0.229, 0.224, 0.225]),
+])
+
+# ── Flask app ──────────────────────────────────────────────────────────────────
 app = Flask(__name__)
 
 
 @app.route('/health', methods=['GET'])
 def health():
-    if model_error:
-        return jsonify({'status': 'error', 'error': model_error, 'device': str(DEVICE)}), 503
-    if not model_ready.is_set():
-        return jsonify({'status': 'loading', 'device': str(DEVICE)}), 200
+    """Health check endpoint."""
     return jsonify({'status': 'ok', 'device': str(DEVICE)}), 200
-
-
-def _require_model():
-    if model_error:
-        return jsonify({'error': f'Model failed to load: {model_error}'}), 503
-    if not model_ready.is_set():
-        return jsonify({'error': 'Model is still loading, retry shortly.'}), 503
-    return None
 
 
 @app.route('/predict', methods=['POST'])
 def predict():
+    """
+    Accepts a multipart/form-data POST with key 'file' (image).
+    Locates hand landmarks with MediaPipe, crops the region, and predicts the sign.
+    """
     if 'file' not in request.files:
         return jsonify({'error': 'No file uploaded. Use key "file".'}), 400
 
@@ -151,19 +98,49 @@ def predict():
     if file.filename == '':
         return jsonify({'error': 'Empty filename.'}), 400
 
-    not_ready = _require_model()
-    if not_ready:
-        return not_ready
-
     try:
+        # Read raw image sent by the app
         img_bytes = file.read()
-        image = Image.open(io.BytesIO(img_bytes))
-        image = ImageOps.exif_transpose(image)
-        image = image.convert('RGB')
-        image, hand_detected = preprocess_image_or_hand(image)
+        image = Image.open(io.BytesIO(img_bytes)).convert('RGB')
         
-        tensor = transform_image(image).unsqueeze(0).to(DEVICE)
+        # Convert to NumPy array format for MediaPipe processing
+        image_np = np.array(image)
+        h, w, _ = image_np.shape
 
+        # ── STAGE 1: Run MediaPipe Hand Detection ─────────────────────────────
+        results = hands_detector.process(image_np)
+
+        # Handle frame if no hand landmarks are detected
+        if not results.multi_hand_landmarks:
+            return jsonify({
+                'translation': 'No hand detected',
+                'result': 'No hand detected',
+                'confidence': 0.0
+            }), 200
+
+        # Calculate a tight bounding box around the detected landmark coordinates
+        hand_landmarks = results.multi_hand_landmarks[0]
+        x_coords = [lm.x for lm in hand_landmarks.landmark]
+        y_coords = [lm.y for lm in hand_landmarks.landmark]
+        
+        # Scale normalized coordinates (0.0 to 1.0) back to raw pixel dimensions
+        xmin, xmax = int(min(x_coords) * w), int(max(x_coords) * w)
+        ymin, ymax = int(min(y_coords) * h), int(max(y_coords) * h)
+
+        # Add 20px padding to keep boundary features and fingertips from clipping
+        padding = 20
+        xmin = max(0, xmin - padding)
+        ymin = max(0, ymin - padding)
+        xmax = min(w, xmax + padding)
+        ymax = min(h, ymax + padding)
+
+        # Slice out just the hand region from the original PIL image
+        hand_crop = image.crop((xmin, ymin, xmax, ymax))
+
+        # ── STAGE 2: Preprocess Crop & Classify Sign ─────────────────────────
+        tensor = transform(hand_crop).unsqueeze(0).to(DEVICE)
+
+        # Inference
         with torch.no_grad():
             outputs    = model(tensor)
             probs      = torch.softmax(outputs, dim=1)
@@ -172,86 +149,17 @@ def predict():
         label      = CLASS_LABELS[predicted.item()]
         confidence = round(confidence.item(), 4)
 
-        if label.isdigit():
-            label = str(int(label) - 1)
-
-        THRESHOLD = 0.50
-
-        if confidence < THRESHOLD:
-            return jsonify({
-                'error': "image doesn't include sign language character",
-                'confidence': confidence
-            }), 400
-
         return jsonify({
             'translation': label,
             'result'     : label,
             'confidence' : confidence,
-            'hand_detected': hand_detected
         }), 200
 
     except Exception as e:
         return jsonify({'error': f'Prediction failed: {str(e)}'}), 500
 
 
-@app.route('/predict/debug', methods=['POST'])
-def predict_debug():
-    if 'file' not in request.files:
-        return jsonify({'error': 'No file uploaded. Use key "file".'}), 400
-
-    file = request.files['file']
-    if file.filename == '':
-        return jsonify({'error': 'Empty filename.'}), 400
-
-    not_ready = _require_model()
-    if not_ready:
-        return not_ready
-
-    try:
-        img_bytes = file.read()
-        image = Image.open(io.BytesIO(img_bytes))
-        image = ImageOps.exif_transpose(image)
-        image = image.convert('RGB')
-        original_size = image.size
-        image, hand_detected = preprocess_image_or_hand(image)
-        
-        tensor = transform_image(image).unsqueeze(0).to(DEVICE)
-
-        with torch.no_grad():
-            outputs = model(tensor)
-            probs = torch.softmax(outputs, dim=1)
-            top5 = torch.topk(probs, 5, dim=1)
-
-        labels_0_9_AZ = [str(i) for i in range(10)] + [chr(c) for c in range(ord('A'), ord('Z') + 1)]
-        labels_AZ_0_9 = [chr(c) for c in range(ord('A'), ord('Z') + 1)] + [str(i) for i in range(10)]
-
-        results = []
-        for j in range(5):
-            idx = top5.indices[0][j].item()
-            conf = round(top5.values[0][j].item(), 4)
-            results.append({
-                'rank': j + 1,
-                'class_index': idx,
-                'confidence': conf,
-                'label_if_0to9_AtoZ': labels_0_9_AZ[idx],
-                'label_if_AtoZ_0to9': labels_AZ_0_9[idx],
-            })
-
-        return jsonify({
-            'image_original_size': list(original_size),
-            'hand_detected': hand_detected,
-            'current_label': CLASS_LABELS[top5.indices[0][0].item()],
-            'current_confidence': round(top5.values[0][0].item(), 4),
-            'top5': results,
-            'note': 'Compare the sign you made with both label columns to find the correct ordering',
-        }), 200
-
-    except Exception as e:
-        return jsonify({'error': f'Debug prediction failed: {str(e)}'}), 500
-
-
+# ── Entry point ────────────────────────────────────────────────────────────────
 if __name__ == '__main__':
-    print(f"[AI Service] Railway mode: {IS_RAILWAY}, MediaPipe disabled: {DISABLE_MEDIAPIPE}")
-    threading.Thread(target=load_model_background, daemon=True).start()
     port = int(os.environ.get('PORT', os.environ.get('AI_PORT', 5000)))
     app.run(host='0.0.0.0', port=port, debug=False)
