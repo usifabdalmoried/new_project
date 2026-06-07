@@ -65,9 +65,29 @@ def load_model(saved_weights, num_classes=36):
     """Load CustomCNN with saved weights."""
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model  = load_torch_model(num_classes=num_classes)
-    model.load_state_dict(
-        torch.load(saved_weights, map_location=device, weights_only=True)
-    )
+    
+    import os
+    import zipfile
+    import io
+
+    if os.path.isdir(saved_weights):
+        # If it's a directory (unpacked PyTorch v2 zip format), we can zip it in-memory
+        # PyTorch expects all files to be inside a parent folder inside the zip archive (e.g., "archive/data.pkl").
+        memory_zip = io.BytesIO()
+        with zipfile.ZipFile(memory_zip, 'w', zipfile.ZIP_DEFLATED) as zf:
+            for root, dirs, files in os.walk(saved_weights):
+                for file in files:
+                    full_path = os.path.join(root, file)
+                    relative_path = os.path.relpath(full_path, saved_weights)
+                    # Prepend "archive/" or dummy top-level dir
+                    archive_path = os.path.join("archive", relative_path).replace("\\", "/")
+                    zf.write(full_path, archive_path)
+        memory_zip.seek(0)
+        state_dict = torch.load(memory_zip, map_location=device, weights_only=True)
+    else:
+        state_dict = torch.load(saved_weights, map_location=device, weights_only=True)
+        
+    model.load_state_dict(state_dict)
     model.to(device)
     model.eval()
     return model
