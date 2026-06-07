@@ -19,22 +19,26 @@
 		{
 			"key": "baseUrl",
 			"value": "https://newproject-production-396a.up.railway.app/api",
-			"type": "string"
+			"type": "string",
+			"disabled": false
 		},
 		{
 			"key": "serverUrl",
 			"value": "https://newproject-production-396a.up.railway.app",
-			"type": "string"
+			"type": "string",
+			"disabled": false
 		},
 		{
 			"key": "authToken",
 			"value": "",
-			"type": "string"
+			"type": "string",
+			"disabled": false
 		},
 		{
 			"key": "aiBaseUrl",
 			"value": "https://newproject-porject-usif.up.railway.app",
-			"type": "string"
+			"type": "string",
+			"disabled": false
 		}
 	],
 	"item": [
