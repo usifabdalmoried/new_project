@@ -1,7 +1,6 @@
 import os
 import io
 import torch
-import torchvision.transforms as transforms
 from flask import Flask, request, jsonify
 from PIL import Image, ImageOps
 import cv2
@@ -111,10 +110,16 @@ print("[AI Service] Model loaded successfully!")
 # -- Image preprocessing (must match training pipeline) ────────────────────────
 # NOTE: Model was trained with ToTensor() only (scales pixels to [0, 1]).
 #       Do NOT apply ImageNet normalization here.
-transform = transforms.Compose([
-    transforms.Resize((64, 64)),
-    transforms.ToTensor(),
-])
+def transform_image(img):
+    # Resize PIL Image to 64x64
+    img_resized = img.resize((64, 64))
+    # Convert PIL Image to float numpy array and scale to [0, 1]
+    arr = np.array(img_resized, dtype=np.float32) / 255.0
+    # Transpose from (H, W, C) to (C, H, W)
+    arr = np.transpose(arr, (2, 0, 1))
+    # Convert to PyTorch tensor
+    tensor = torch.from_numpy(arr)
+    return tensor
 
 # ── Flask app ──────────────────────────────────────────────────────────────────
 app = Flask(__name__)
@@ -150,7 +155,7 @@ def predict():
         # Detect and crop hand region
         image, hand_detected = preprocess_image_or_hand(image)
         
-        tensor = transform(image).unsqueeze(0).to(DEVICE)   # [1, 3, 64, 64]
+        tensor = transform_image(image).unsqueeze(0).to(DEVICE)   # [1, 3, 64, 64]
 
         # Inference
         with torch.no_grad():
@@ -207,7 +212,7 @@ def predict_debug():
         # Detect and crop hand region
         image, hand_detected = preprocess_image_or_hand(image)
         
-        tensor = transform(image).unsqueeze(0).to(DEVICE)
+        tensor = transform_image(image).unsqueeze(0).to(DEVICE)
 
         with torch.no_grad():
             outputs = model(tensor)
