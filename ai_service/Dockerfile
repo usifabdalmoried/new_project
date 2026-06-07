@@ -21,5 +21,5 @@ COPY . .
 # Expose port (Railway passes PORT env var)
 EXPOSE 5000
 
-# Start command (uses shell format to expand the $PORT environment variable)
-CMD gunicorn app:app --bind 0.0.0.0:$PORT --timeout 120 --workers 1
+# Start command (runs Flask app directly to save memory and avoid Gunicorn master/worker memory overhead)
+CMD ["python", "app.py"]
