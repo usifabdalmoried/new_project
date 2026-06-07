@@ -4,6 +4,46 @@ import torch
 import torchvision.transforms as transforms
 from flask import Flask, request, jsonify
 from PIL import Image, ImageOps
+import cv2
+import mediapipe as mp
+import numpy as np
+
+# Initialize MediaPipe Hands for static crop
+mp_hands = mp.solutions.hands
+hands = mp_hands.Hands(
+    static_image_mode=True,
+    max_num_hands=1,
+    min_detection_confidence=0.5
+)
+
+def preprocess_image_or_hand(image):
+    cv_img = np.array(image)
+    h, w, _ = cv_img.shape
+    
+    # Convert RGB for mediapipe
+    results = hands.process(cv_img)
+    
+    hand_detected = False
+    if results.multi_hand_landmarks:
+        landmarks = results.multi_hand_landmarks[0]
+        lms = landmarks.landmark
+        x_coords = [lm.x for lm in lms]
+        y_coords = [lm.y for lm in lms]
+
+        x_min, x_max = int(min(x_coords) * w), int(max(x_coords) * w)
+        y_min, y_max = int(min(y_coords) * h), int(max(y_coords) * h)
+
+        padding = 20
+        x_min, x_max = max(0, x_min - padding), min(w, x_max + padding)
+        y_min, y_max = max(0, y_min - padding), min(h, y_max + padding)
+
+        if x_max > x_min and y_max > y_min:
+            hand_region = cv_img[y_min:y_max, x_min:x_max]
+            if hand_region.size > 0:
+                image = Image.fromarray(hand_region)
+                hand_detected = True
+                
+    return image, hand_detected
 
 # ── Import model from same directory ──────────────────────────────────────────
 from model import load_model
@@ -97,6 +137,10 @@ def predict():
         # Fix EXIF rotation from mobile cameras
         image = ImageOps.exif_transpose(image)
         image = image.convert('RGB')
+
+        # Detect and crop hand region
+        image, hand_detected = preprocess_image_or_hand(image)
+        
         tensor = transform(image).unsqueeze(0).to(DEVICE)   # [1, 3, 64, 64]
 
         # Inference
@@ -108,7 +152,11 @@ def predict():
         label      = CLASS_LABELS[predicted.item()]
         confidence = round(confidence.item(), 4)
 
-        THRESHOLD = 0.70  # Minimum Confidence
+        # Digit adjustment mapping (matches get_top_k_classes digit offset logic)
+        if label.isdigit():
+            label = str(int(label) - 1)
+
+        THRESHOLD = 0.50  # Lower threshold because hand is pre-cropped, making predictions cleaner
 
         if confidence < THRESHOLD:
             return jsonify({
@@ -120,6 +168,7 @@ def predict():
             'translation': label,
             'result'     : label,
             'confidence' : confidence,
+            'hand_detected': hand_detected
         }), 200
 
     except Exception as e:
@@ -145,6 +194,10 @@ def predict_debug():
         image = ImageOps.exif_transpose(image)
         image = image.convert('RGB')
         original_size = image.size
+        
+        # Detect and crop hand region
+        image, hand_detected = preprocess_image_or_hand(image)
+        
         tensor = transform(image).unsqueeze(0).to(DEVICE)
 
         with torch.no_grad():
@@ -169,6 +222,7 @@ def predict_debug():
 
         return jsonify({
             'image_original_size': list(original_size),
+            'hand_detected': hand_detected,
             'current_label': CLASS_LABELS[top5.indices[0][0].item()],
             'current_confidence': round(top5.values[0][0].item(), 4),
             'top5': results,

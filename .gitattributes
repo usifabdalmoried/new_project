@@ -1,0 +1,6 @@
+# Keep git from auto-converting line endings for binary model weights with no extension
+ai_service/collected_weights/data/* binary
+ai_service/collected_weights/.data/* binary
+*.zip binary
+*.pth binary
+*.db binary
