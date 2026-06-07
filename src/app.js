@@ -62,14 +62,25 @@ function createApp() {
       if (req.file) {
         fs.unlink(req.file.path, () => { });
       }
-      console.error('[AI Proxy Error]:', aiError.message);
+      console.error('[AI Proxy Error]:', aiError.message, 'AI URL:', config.aiModelUrl);
 
-      // Forward AI service 400 errors (e.g. low confidence) as-is
-      if (aiError.response && aiError.response.status === 400) {
-        return res.status(400).json(aiError.response.data);
+      if (aiError.response) {
+        if (aiError.response.status === 400) {
+          return res.status(400).json(aiError.response.data);
+        }
+
+        return res.status(502).json({
+          error: `AI Service returned ${aiError.response.status}`,
+          details: aiError.response.data || aiError.response.statusText || aiError.message,
+          aiModelUrl: config.aiModelUrl,
+        });
       }
 
-      return res.status(500).json({ error: `AI Service unavailable: ${aiError.message}` });
+      return res.status(502).json({
+        error: `AI Service unavailable at ${config.aiModelUrl}`,
+        details: aiError.message,
+        aiModelUrl: config.aiModelUrl,
+      });
     }
   });
 

@@ -7,11 +7,14 @@ if (isProduction && !process.env.JWT_SECRET) {
 }
 
 const defaultAiUrl = 'http://127.0.0.1:5000/predict';
-let aiModelUrl = process.env.AI_MODEL_URL || defaultAiUrl;
+const aiModelUrl = process.env.AI_MODEL_URL || defaultAiUrl;
 
-if (isProduction && (aiModelUrl === defaultAiUrl || aiModelUrl.includes('127.0.0.1') || aiModelUrl.includes('localhost'))) {
-  aiModelUrl = 'https://newproject-porject-usif.up.railway.app/predict'; // AI Flask service (separate Railway project)
+if (isProduction && !process.env.AI_MODEL_URL) {
+  console.error('[CONFIG] Production requires AI_MODEL_URL. Set it to the deployed Flask AI service URL and restart the app.');
+  process.exit(1);
 }
+
+console.log('[CONFIG] AI model URL:', aiModelUrl);
 
 module.exports = {
   port: parseInt(process.env.PORT || '3000', 10),
