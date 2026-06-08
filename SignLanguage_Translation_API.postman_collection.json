@@ -18,13 +18,13 @@
 	"variable": [
 		{
 			"key": "baseUrl",
-			"value": "https://backend-porject-usif.up.railway.app/api",
+			"value": "http://localhost:5000/api",
 			"type": "string",
 			"disabled": false
 		},
 		{
 			"key": "serverUrl",
-			"value": "https://backend-porject-usif.up.railway.app",
+			"value": "http://localhost:5000",
 			"type": "string",
 			"disabled": false
 		},
@@ -36,7 +36,7 @@
 		},
 		{
 			"key": "aiBaseUrl",
-			"value": "https://newproject-porject-usif.up.railway.app",
+			"value": "http://127.0.0.1:5001",
 			"type": "string",
 			"disabled": false
 		}

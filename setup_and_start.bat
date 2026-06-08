@@ -99,7 +99,7 @@ if not exist "%WEIGHTS_FILE%" (
 )
 
 :: Set environment variables
-set AI_PORT=5000
+set AI_PORT=5001
 if exist "%~dp0ai_service\Model_weights.pth.zip" (
     set "MODEL_WEIGHTS_PATH=%~dp0ai_service\Model_weights.pth.zip"
 ) else if exist "%~dp0ai_service\Model_weights.pth" (
@@ -110,7 +110,7 @@ if exist "%~dp0ai_service\Model_weights.pth.zip" (
 
 :: Run Flask server
 echo ====================================================
-echo   AI Service is starting on http://127.0.0.1:5000
+echo   AI Service is starting on http://127.0.0.1:5001
 echo   Press Ctrl+C to stop
 echo ====================================================
 echo.

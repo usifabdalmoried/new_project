@@ -1,14 +1,14 @@
 ### REST API tests (VS Code REST Client or similar)
-### Default server: http://localhost:3000
+### Default server: http://localhost:5000
 
-@baseUrl = http://localhost:3000/api
+@baseUrl = http://localhost:5000/api
 @authToken = replace-with-token-from-login
 
 ### Health
-GET http://localhost:3000/health
+GET http://localhost:5000/health
 
 ### API index (all route URLs as JSON)
-GET http://localhost:3000/api
+GET http://localhost:5000/api
 
 ### --- Auth ---
 
@@ -130,7 +130,7 @@ GET {{baseUrl}}/translation/history?page=1&limit=20
 Authorization: Bearer {{authToken}}
 
 ### --- AI Predict (via Backend Proxy — works on Railway too) ---
-POST http://localhost:3000/predict
+POST http://localhost:5000/predict
 Content-Type: multipart/form-data; boundary=boundary
 
 --boundary
@@ -152,7 +152,7 @@ Content-Type: image/jpeg
 --boundary--
 
 ### --- AI Direct Predict (Local Flask — bypasses Node.js) ---
-POST http://127.0.0.1:5000/predict
+POST http://127.0.0.1:5001/predict
 Content-Type: multipart/form-data; boundary=boundary
 
 --boundary
@@ -163,4 +163,4 @@ Content-Type: image/jpeg
 --boundary--
 
 ### --- AI Health Check (Local Flask) ---
-GET http://127.0.0.1:5000/health
+GET http://127.0.0.1:5001/health
