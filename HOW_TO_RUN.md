@@ -100,6 +100,32 @@ git push origin usif-1
 ```
 (المنصة هتعمل Deploy تلقائياً للتعديلات الجديدة 🚀)
 
+### ربط PostgreSQL على Railway (مهم جداً)
+
+إذا ظهر خطأ مثل `Authentication failed against database server at postgres.railway.internal`:
+
+1. افتح مشروعك على [Railway Dashboard](https://railway.app/dashboard).
+2. تأكد أن عندك **خدمتين** في نفس المشروع:
+   - **PostgreSQL** (قاعدة البيانات)
+   - **Backend** (Node.js API)
+3. ادخل على خدمة **PostgreSQL** → تبويب **Variables** → انسخ قيمة `DATABASE_URL`.
+4. ادخل على خدمة **Backend** → **Variables**:
+   - احذف أي `DATABASE_URL` قديم مكتوب يدوياً بكلمة مرور خاطئة.
+   - أضف متغير جديد:
+     - **الاسم:** `DATABASE_URL`
+     - **القيمة:** `${{Postgres.DATABASE_URL}}`  
+       (استبدل `Postgres` باسم خدمة PostgreSQL عندك إن كان مختلفاً)
+   - أو الصق نفس `DATABASE_URL` المنسوخ من خطوة 3.
+5. تأكد أيضاً من وجود `JWT_SECRET` و `AI_MODEL_URL` في متغيرات الـ Backend.
+6. اعمل **Redeploy** لخدمة الـ Backend.
+7. اختبر الاتصال:
+   ```
+   GET https://backend-porject-usif.up.railway.app/health
+   ```
+   يجب أن ترى `"database": "connected"`.
+
+> **ملاحظة:** إذا أعدت إنشاء خدمة PostgreSQL، كلمة المرور تتغير — يجب تحديث `DATABASE_URL` في الـ Backend فوراً.
+
 ---
 
 ## 📱 رابعاً: الربط مع تطبيق الـ Flutter
@@ -122,6 +148,7 @@ git push origin usif-1
 | `ECONNREFUSED :3000` | سيرفر الـ Backend مغلق | تأكد من عمل `npm run dev` |
 | `Model weights not found` | ملف الأوزان غير موجود | تأكد من وجود ملف الأوزان في مكانه الصحيح في الـ AI service |
 | `Token expired` | توكن الأمان انتهت صلاحيته | قم بعمل تسجيل دخول (Login) جديد للحصول على توكن جديد |
+| `Authentication failed against database server` | `DATABASE_URL` على Railway غير صحيح أو قديم | اتبع خطوات ربط PostgreSQL أدناه |
 
 ---
 

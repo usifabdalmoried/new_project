@@ -10,10 +10,13 @@ from model import load_model
 _model = None
 _hands = None
 _device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-_class_names = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10',
-               'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j',
-               'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
-               'u', 'v', 'w', 'x', 'y', 'z']
+_model_class_labels = [str(i) for i in range(1, 11)] + [chr(c) for c in range(ord('a'), ord('z') + 1)]
+
+
+def _to_display_label(raw_label):
+    if raw_label.isdigit():
+        return str(int(raw_label) - 1)
+    return raw_label.upper()
 
 def _initialize_assets(model_path=None):
     """Internal function to ensure model and hand tracker are loaded."""
@@ -43,7 +46,7 @@ def _initialize_assets(model_path=None):
         _hands = mp_hands.Hands(
             static_image_mode=False,
             max_num_hands=1,
-            min_detection_confidence=0.7,
+            min_detection_confidence=0.3,
             min_tracking_confidence=0.5
         )
 
@@ -139,14 +142,11 @@ def get_top_k_classes(probs, k=5):
     for i in range(top_probs.size(1)):
         idx = top_idxs[0][i].item()
         prob = top_probs[0][i].item()
-        label = _class_names[idx]
-        
-        # Digit adjustment logic from original test script
-        if label.isdigit():
-            label = str(int(label) - 1)
-            
+        raw_label = _model_class_labels[idx]
+
         results.append({
-            "label": label,
+            "label": _to_display_label(raw_label),
+            "raw_label": raw_label,
             "confidence": float(prob)
         })
         

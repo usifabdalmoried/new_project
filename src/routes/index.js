@@ -46,6 +46,11 @@ router.get('/', (req, res) => {
             headers: { Authorization: 'Bearer <token>' },
           },
         },
+        signs: {
+          list: { method: 'GET', url: `${base}/api/signs` },
+          byLetter: { method: 'GET', url: `${base}/api/signs/:letter` },
+          staticImage: { method: 'GET', url: `${base}/signs/A.png` },
+        },
         staticUploads: { method: 'GET', url: `${base}/uploads/<filename>` },
       },
     },
@@ -57,5 +62,6 @@ router.use('/users', require('./user.routes'));
 router.use('/products', require('./product.routes'));
 router.use('/contact', require('./contact.routes'));
 router.use('/translation', require('./translation.routes'));
+router.use('/signs', require('./sign.routes'));
 
 module.exports = router;

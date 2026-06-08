@@ -30,6 +30,18 @@ function errorHandler(err, req, res, next) {
     }
   }
 
+  if (
+    err.name === 'PrismaClientInitializationError' ||
+    (err.message && err.message.includes('Authentication failed against database server'))
+  ) {
+    console.error('[DB] Connection/auth error:', err.message);
+    return fail(
+      res,
+      'Database connection failed. Check DATABASE_URL on Railway (PostgreSQL service variables).',
+      503
+    );
+  }
+
   console.error('[ERROR]', err.name, err.message, err.stack);
   const message = err.message || 'Internal server error';
   return fail(res, message, 500);

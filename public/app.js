@@ -34,6 +34,8 @@ const translateBtn = document.getElementById('translate-btn');
 const resultCard = document.getElementById('result-card');
 const resultText = document.getElementById('result-text');
 const resultConfidence = document.getElementById('result-confidence');
+const referenceSignContainer = document.getElementById('reference-sign-container');
+const referenceSignImage = document.getElementById('reference-sign-image');
 const playAudioBtn = document.getElementById('play-audio-btn');
 const globalAudioPlayer = document.getElementById('global-audio-player');
 
@@ -328,7 +330,7 @@ async function performTranslation() {
   lucide.createIcons();
 
   const formData = new FormData();
-  formData.append('image', SELECTED_FILE);
+  formData.append('file', SELECTED_FILE);
 
   try {
     const res = await fetch(`${API_BASE}/translation/upload`, {
@@ -342,7 +344,20 @@ async function performTranslation() {
 
     // Display translation outputs
     resultText.textContent = data.data.translation;
-    resultConfidence.textContent = 'Translation Match OK';
+    if (data.data.confidence != null) {
+      const pct = (data.data.confidence * 100).toFixed(1);
+      resultConfidence.textContent = `Confidence: ${pct}%`;
+    } else {
+      resultConfidence.textContent = 'Translation Match OK';
+    }
+
+    if (data.data.signImageUrl) {
+      referenceSignImage.src = `/${data.data.signImageUrl}`;
+      referenceSignContainer.classList.remove('hidden');
+    } else {
+      referenceSignContainer.classList.add('hidden');
+      referenceSignImage.removeAttribute('src');
+    }
     
     // Setup audio path
     globalAudioPlayer.src = `/${data.data.audioUrl}`;
@@ -407,10 +422,11 @@ function renderHistory(historyData) {
   let html = '';
   items.forEach(item => {
     const dateStr = new Date(item.createdAt).toLocaleString();
+    const thumbUrl = item.signImageUrl ? `/${item.signImageUrl}` : `/${item.imageUrl}`;
     html += `
       <div class="history-item" data-id="${item.id}">
         <div class="item-left">
-          <img class="item-thumb" src="/${item.imageUrl}" alt="Gesture preview" onerror="this.src='https://placehold.co/50x50?text=Sign'">
+          <img class="item-thumb" src="${thumbUrl}" alt="Gesture preview" onerror="this.src='https://placehold.co/50x50?text=Sign'">
           <div class="item-info">
             <span class="item-translation">${item.translation}</span>
             <span class="item-date">${dateStr}</span>

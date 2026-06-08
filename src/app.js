@@ -29,8 +29,23 @@ function createApp() {
 
   app.use(apiLimiter);
 
-  app.get('/health', (_req, res) => {
-    res.status(200).json({ success: true, data: { status: 'ok', timestamp: new Date().toISOString() } });
+  app.get('/health', async (_req, res) => {
+    const payload = {
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+      database: 'unknown',
+    };
+
+    try {
+      const { prisma } = require('./lib/prisma');
+      await prisma.$queryRaw`SELECT 1`;
+      payload.database = 'connected';
+      return res.status(200).json({ success: true, data: payload });
+    } catch (err) {
+      payload.database = 'disconnected';
+      payload.databaseError = err.message?.split('\n')[0] || 'Database connection failed';
+      return res.status(503).json({ success: false, data: payload });
+    }
   });
 
 
@@ -39,6 +54,7 @@ function createApp() {
   const axios = require('axios');
   const FormData = require('form-data');
   const config = require('./config');
+  const { attachSignReference } = require('./utils/signReference');
 
   app.post('/predict', upload.single('file'), async (req, res) => {
     if (!req.file) {
@@ -57,7 +73,7 @@ function createApp() {
       // Async cleanup local temp file
       fs.unlink(req.file.path, () => { });
 
-      return res.status(200).json(aiResponse.data);
+      return res.status(200).json(attachSignReference(aiResponse.data));
     } catch (aiError) {
       if (req.file) {
         fs.unlink(req.file.path, () => { });

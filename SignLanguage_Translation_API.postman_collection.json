@@ -2,7 +2,7 @@
 	"info": {
 		"_postman_id": "sign-language-api-v2",
 		"name": "🤟 Sign Language Translation API",
-		"description": "Complete API collection for the Sign Language Translation Backend.\n\n---\n\n## 🚀 Deployment (Railway)\n\n**Backend:** https://backend-porject-usif.up.railway.app\n\n**AI Service:** https://newproject-porject-usif.up.railway.app\n\n---\n\n## 📌 Variables\n\n| Variable | Value |\n|---|---|\n| `baseUrl` | https://backend-porject-usif.up.railway.app/api |\n| `serverUrl` | https://backend-porject-usif.up.railway.app |\n| `aiBaseUrl` | https://newproject-porject-usif.up.railway.app |\n| `authToken` | Auto-filled after Login |\n\n---\n\n## 📋 Steps\n1. Run **Register** to create account\n2. Run **Login** → Token saved automatically ✅\n3. Use any protected endpoint (Token added automatically)\n4. Test AI directly from **🤖 AI Service (Direct)** folder",
+		"description": "Complete API collection for the Sign Language Translation Backend.\n\n---\n\n## 🖥️ Local (default variables)\n\n**Backend:** http://localhost:3000\n\n**AI Service:** http://127.0.0.1:5000\n\n---\n\n## 🚀 Railway (production)\n\n**Backend:** https://backend-porject-usif.up.railway.app\n\n**AI Service:** https://newproject-porject-usif.up.railway.app\n\n---\n\n## 📌 Variables\n\n| Variable | Local | Railway |\n|---|---|---|\n| `serverUrl` | http://localhost:3000 | https://backend-porject-usif.up.railway.app |\n| `baseUrl` | http://localhost:3000/api | https://backend-porject-usif.up.railway.app/api |\n| `aiBaseUrl` | http://127.0.0.1:5000 | https://newproject-porject-usif.up.railway.app |\n| `authToken` | Auto-filled after Login | Auto-filled after Login |\n\n---\n\n## 📋 Steps\n1. Start **AI Service** (`ai_service/app.py`) then **Backend** (`npm run dev`)\n2. Run **Register** to create account\n3. Run **Login** → Token saved automatically ✅\n4. Upload image via **Upload & Translate Image**\n5. Debug AI from **🤖 AI Service (Direct)** → `/predict/debug`\n\n---\n\n## 🤖 AI notes\n- Classes: `0-9` then `A-Z` (36 total)\n- Confidence threshold: `0.25`\n- MediaPipe hand detection: `min_detection_confidence = 0.3`\n- Form field name: `file`",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"auth": {
@@ -62,7 +62,7 @@
 								"health"
 							]
 						},
-						"description": "Check if the server is running.\n\n✅ Expected Response (200):\n```json\n{\"status\": \"ok\"}\n```"
+						"description": "Check if the Backend server is running.\n\n✅ Expected Response (200):\n```json\n{\n  \"success\": true,\n  \"data\": {\n    \"status\": \"ok\",\n    \"timestamp\": \"2026-06-07T...\",\n    \"database\": \"connected\"\n  }\n}\n```"
 					},
 					"response": []
 				},
@@ -530,7 +530,7 @@
 								"upload"
 							]
 						},
-						"description": "Upload a sign language image for translation.\n\n🔐 Requires Login first.\n\n**Steps:**\n1. Login first\n2. Body → form-data\n3. Key: `file` → change to **File** type\n4. Select your image\n5. Send!\n\n✅ Expected Response (200):\n```json\n{\n  \"message\": \"Translation successful\",\n  \"imageUrl\": \"uploads/image-xxx.jpg\",\n  \"translation\": \"A\",\n  \"audioUrl\": \"uploads/audio-xxx.mp3\"\n}\n```"
+						"description": "Upload a sign language image for translation.\n\n🔐 Requires Login first.\n\n**Steps:**\n1. Login first\n2. Body → form-data\n3. Key: `file` → change to **File** type\n4. Select your image (e.g. `ai_service/test_sign.jpg`)\n5. Send!\n\n✅ Expected Response (200):\n```json\n{\n  \"success\": true,\n  \"data\": {\n    \"message\": \"Translation successful\",\n    \"imageUrl\": \"uploads/sign-xxx.jpg\",\n    \"translation\": \"A\",\n    \"confidence\": 0.9876,\n    \"handDetected\": true,\n    \"signImageUrl\": \"signs/A.png\",\n    \"referenceSign\": { \"letter\": \"A\", \"imageUrl\": \"signs/A.png\" },\n    \"audioUrl\": \"uploads/audio-xxx.mp3\"\n  }\n}\n```\n\n❌ Low confidence (< 0.25) returns 400:\n```json\n{\"message\": \"image doesn't include sign language character\"}\n```\n\n📌 `signImageUrl` = reference sign from `public/signs/`."
 					},
 					"response": []
 				},
@@ -565,7 +565,55 @@
 								}
 							]
 						},
-						"description": "Get your translation history (all previous sign language translations).\n\n🔐 Requires Login first.\n\n✅ Expected Response (200):\n```json\n{\n  \"success\": true,\n  \"data\": {\n    \"items\": [\n      {\n        \"id\": 1,\n        \"imageUrl\": \"uploads/image-xxx.jpg\",\n        \"translation\": \"A\",\n        \"audioUrl\": \"uploads/audio-xxx.mp3\",\n        \"createdAt\": \"2026-06-01T...\"\n      }\n    ],\n    \"page\": 1,\n    \"limit\": 20,\n    \"total\": 5,\n    \"totalPages\": 1\n  }\n}\n```"
+						"description": "Get your translation history (all previous sign language translations).\n\n🔐 Requires Login first.\n\n✅ Expected Response (200):\n```json\n{\n  \"success\": true,\n  \"data\": {\n    \"items\": [\n      {\n        \"id\": 1,\n        \"imageUrl\": \"uploads/image-xxx.jpg\",\n        \"translation\": \"A\",\n        \"signImageUrl\": \"signs/A.png\",\n        \"referenceSign\": { \"letter\": \"A\", \"imageUrl\": \"signs/A.png\" },\n        \"audioUrl\": \"uploads/audio-xxx.mp3\",\n        \"createdAt\": \"2026-06-01T...\"\n      }\n    ],\n    \"page\": 1,\n    \"limit\": 20,\n    \"total\": 5,\n    \"totalPages\": 1\n  }\n}\n```"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "🤟 Signs",
+			"item": [
+				{
+					"name": "14a - List All Signs",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/signs",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"signs"
+							]
+						},
+						"description": "List all available reference sign images (0-9, A-Z).\n\n✅ No auth required.\n\n✅ Expected Response (200):\n```json\n{\n  \"success\": true,\n  \"data\": {\n    \"signs\": [{\"letter\": \"A\", \"imageUrl\": \"signs/A.png\"}],\n    \"total\": 26,\n    \"expected\": 36,\n    \"missing\": [\"0\", \"1\", \"2\"]\n  }\n}\n```"
+					},
+					"response": []
+				},
+				{
+					"name": "14b - Get Sign by Letter",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/signs/A",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"signs",
+								"A"
+							]
+						},
+						"description": "Get reference sign image URL for a specific letter or digit.\n\n✅ No auth required.\n⚠️ Replace `A` with any valid sign: `0-9` or `A-Z`.\n\n✅ Expected Response (200):\n```json\n{\n  \"success\": true,\n  \"data\": {\n    \"letter\": \"A\",\n    \"imageUrl\": \"signs/A.png\"\n  }\n}\n```\n\n📌 Open image: `{{serverUrl}}/signs/A.png`"
 					},
 					"response": []
 				}
@@ -613,7 +661,7 @@
 			"name": "🤖 AI Service (Direct)",
 			"item": [
 				{
-					"name": "15 - AI Health Check (via Backend)",
+					"name": "15 - Backend Health Check",
 					"request": {
 						"auth": {
 							"type": "noauth"
@@ -636,14 +684,11 @@
 				{
 					"name": "16 - AI Predict (via Backend Proxy)",
 					"request": {
+						"auth": {
+							"type": "noauth"
+						},
 						"method": "POST",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{authToken}}",
-								"description": "Auto-filled after Login ✅"
-							}
-						],
+						"header": [],
 						"body": {
 							"mode": "formdata",
 							"formdata": [
@@ -664,12 +709,12 @@
 								"predict"
 							]
 						},
-						"description": "Send an image to the AI model **through the Node.js backend proxy** at `/predict`.\n\n**No auth required** — the backend forwards the request to the Flask AI service.\n\n**Steps:**\n1. Body → form-data\n2. Key: `file` → change type to **File**\n3. Select a sign language image\n4. Send!\n\n✅ Expected Response (200):\n```json\n{\n  \"translation\": \"A\",\n  \"result\": \"A\",\n  \"confidence\": 0.9876\n}\n```\n\n📌 Classes: 0-9 (digits) + A-Z (letters) = 36 total\n\n⚠️ For this to work, the AI Flask service must also be running (locally or on Railway)."
+						"description": "Send an image to the AI model **through the Node.js backend proxy** at `/predict`.\n\n✅ No auth required.\n\n**Steps:**\n1. Body → form-data\n2. Key: `file` → change type to **File**\n3. Select a sign language image (e.g. `ai_service/test_sign.jpg`)\n4. Send!\n\n✅ Expected Response (200):\n```json\n{\n  \"translation\": \"A\",\n  \"result\": \"A\",\n  \"confidence\": 0.9876,\n  \"hand_detected\": true,\n  \"signImageUrl\": \"signs/A.png\",\n  \"referenceSign\": { \"letter\": \"A\", \"imageUrl\": \"signs/A.png\" }\n}\n```\n\n📌 Backend adds `signImageUrl` from `public/signs/`.\n📌 Classes: 0-9 then A-Z (36 total). Threshold: 0.25."
 					},
 					"response": []
 				},
 				{
-					"name": "17 - AI Direct Predict (Railway Flask)",
+					"name": "17 - AI Direct Predict (Flask)",
 					"request": {
 						"method": "POST",
 						"header": [],
@@ -693,12 +738,12 @@
 								"predict"
 							]
 						},
-						"description": "Send an image **directly** to the Railway Flask AI service (bypassing Node.js backend).\n\n**Steps:**\n1. Body → form-data\n2. Key: `file` → change type to **File**\n3. Select a sign language image\n4. Send!\n\n✅ Expected Response (200):\n```json\n{\n  \"translation\": \"A\",\n  \"result\": \"A\",\n  \"confidence\": 0.9876\n}\n```"
+						"description": "Send an image **directly** to the Flask AI service (bypassing Node.js backend).\n\n**Steps:**\n1. Body → form-data\n2. Key: `file` → change type to **File**\n3. Select a sign language image (e.g. `ai_service/test_sign.jpg`)\n4. Send!\n\n✅ Expected Response (200):\n```json\n{\n  \"translation\": \"A\",\n  \"result\": \"A\",\n  \"confidence\": 0.9876,\n  \"hand_detected\": true\n}\n```\n\n❌ Low confidence (< 0.25):\n```json\n{\"error\": \"image doesn't include sign language character\", \"confidence\": 0.12}\n```\n\n📌 Direct Flask response does NOT include `signImageUrl` — use Backend proxy for that."
 					},
 					"response": []
 				},
 				{
-					"name": "18 - AI Health Check (Railway Flask)",
+					"name": "18 - AI Health Check (Flask)",
 					"request": {
 						"method": "GET",
 						"header": [],
@@ -711,7 +756,7 @@
 								"health"
 							]
 						},
-						"description": "Check if the Railway Flask AI Service is running.\n\n✅ Expected Response (200):\n```json\n{\"status\": \"ok\", \"device\": \"cpu\"}\n```"
+						"description": "Check if the Flask AI Service is running.\n\n✅ Ready (200):\n```json\n{\n  \"status\": \"ok\",\n  \"device\": \"cpu\",\n  \"weights\": \"C:/.../ai_service/weights/model.pth\"\n}\n```\n\n⏳ Loading (200):\n```json\n{\"status\": \"loading\", \"device\": \"cpu\"}\n```\n\n❌ Error (503):\n```json\n{\"status\": \"error\", \"error\": \"...\", \"device\": \"cpu\"}\n```"
 					},
 					"response": []
 				},
@@ -741,7 +786,7 @@
 								"debug"
 							]
 						},
-						"description": "DEBUG endpoint - Returns TOP 5 predictions with BOTH possible class orderings.\n\nUse this to diagnose wrong translations!\n\nSteps:\n1. Body -> form-data\n2. Key: `file` -> change to File type\n3. Select a sign language image\n4. Send!\n\n✅ Expected Response (200):\n```json\n{\n  \"current_label\": \"A\",\n  \"current_confidence\": 0.9876,\n  \"top5\": [\n    {\n      \"rank\": 1,\n      \"class_index\": 10,\n      \"confidence\": 0.9876,\n      \"label_if_0to9_AtoZ\": \"A\",\n      \"label_if_AtoZ_0to9\": \"K\"\n    }\n  ]\n}\n```"
+						"description": "DEBUG endpoint — returns TOP 5 predictions with BOTH possible class orderings.\n\nUse this to diagnose wrong translations!\n\n**Steps:**\n1. Body → form-data\n2. Key: `file` → File type\n3. Select a sign language image\n4. Send!\n\n✅ Expected Response (200):\n```json\n{\n  \"image_original_size\": [640, 480],\n  \"hand_detected\": true,\n  \"current_label\": \"A\",\n  \"current_confidence\": 0.9876,\n  \"top5\": [\n    {\n      \"rank\": 1,\n      \"class_index\": 10,\n      \"confidence\": 0.9876,\n      \"label_if_0to9_AtoZ\": \"A\",\n      \"label_if_AtoZ_0to9\": \"K\"\n    }\n  ],\n  \"note\": \"Compare the sign you made with both label columns to find the correct ordering\"\n}\n```"
 					},
 					"response": []
 				}

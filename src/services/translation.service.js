@@ -6,6 +6,7 @@ const gTTS = require('gtts');
 const { prisma } = require('../lib/prisma');
 const config = require('../config');
 const { AppError } = require('../utils/AppError');
+const { getSignImagePath } = require('../utils/signReference');
 
 async function uploadAndTranslate(userId, file) {
   if (!file) {
@@ -14,6 +15,8 @@ async function uploadAndTranslate(userId, file) {
 
   const imagePath = file.path;
   let translationResult = 'Help';
+  let confidence = null;
+  let handDetected = null;
 
   try {
     const form = new FormData();
@@ -22,8 +25,10 @@ async function uploadAndTranslate(userId, file) {
       headers: form.getHeaders(),
       timeout: 30000,
     });
-    translationResult =
-      aiResponse.data?.translation || aiResponse.data?.result || translationResult;
+    const aiData = aiResponse.data || {};
+    translationResult = aiData.translation || aiData.result || translationResult;
+    confidence = aiData.confidence ?? null;
+    handDetected = aiData.hand_detected ?? null;
   } catch (aiError) {
     // If AI returned 400 (low confidence / not a sign language image), pass that error to user
     if (aiError.response && aiError.response.status === 400) {
@@ -50,12 +55,19 @@ async function uploadAndTranslate(userId, file) {
     },
   });
 
-const norm = (p) => p ? p.replace(/\\/g, '/') : null;
+const norm = (p) => (p ? p.replace(/\\/g, '/') : null);
+  const signImageUrl = getSignImagePath(translationResult);
 
   return {
     message: 'Translation successful',
     imageUrl: norm(imagePath),
     translation: translationResult,
+    confidence,
+    handDetected,
+    signImageUrl,
+    referenceSign: signImageUrl
+      ? { letter: translationResult, imageUrl: signImageUrl }
+      : null,
     audioUrl: norm(audioPath),
   };
 }
@@ -75,13 +87,20 @@ async function getHistory(userId, { page = 1, limit = 20 }) {
   const norm = (p) => p ? p.replace(/\\/g, '/') : null;
 
   return {
-    items: rows.map((row) => ({
-      id: row.id,
-      imageUrl: norm(row.image_path),
-      translation: row.translation_result,
-      audioUrl: norm(row.audio_path),
-      createdAt: row.created_at,
-    })),
+    items: rows.map((row) => {
+      const signImageUrl = getSignImagePath(row.translation_result);
+      return {
+        id: row.id,
+        imageUrl: norm(row.image_path),
+        translation: row.translation_result,
+        signImageUrl,
+        referenceSign: signImageUrl
+          ? { letter: row.translation_result, imageUrl: signImageUrl }
+          : null,
+        audioUrl: norm(row.audio_path),
+        createdAt: row.created_at,
+      };
+    }),
     page,
     limit,
     total,

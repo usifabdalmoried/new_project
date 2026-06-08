@@ -31,4 +31,27 @@ const upload = multer({
   limits: { fileSize: 10 * 1024 * 1024 },
 });
 
-module.exports = { upload };
+const signsDir = path.join(uploadsDir, 'signs');
+
+const signRefStorage = multer.diskStorage({
+  destination: (req, _file, cb) => {
+    if (!fs.existsSync(signsDir)) {
+      fs.mkdirSync(signsDir, { recursive: true });
+    }
+    cb(null, signsDir);
+  },
+  filename: (req, file, cb) => {
+    const letter = String(req.body.letter || req.params.letter || 'X')
+      .trim()
+      .toUpperCase();
+    cb(null, `${letter}${path.extname(file.originalname) || '.jpg'}`);
+  },
+});
+
+const signRefUpload = multer({
+  storage: signRefStorage,
+  fileFilter,
+  limits: { fileSize: 10 * 1024 * 1024 },
+});
+
+module.exports = { upload, signRefUpload };
