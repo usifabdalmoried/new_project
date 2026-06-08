@@ -90,7 +90,7 @@ python app.py
 ## 🚀 ثالثاً: النشر على Railway (Production)
 
 الـ Backend والـ AI مربوطين ومنشورين بالفعل على Railway:
-* **رابط الـ API الأساسي (Node.js):** `https://backend-porject-usif.up.railway.app`
+* **رابط الـ API الأساسي (Node.js):** `https://newproject-production-396a.up.railway.app`
 
 ### لدفع أي تعديلات جديدة للـ Production:
 ```bash
@@ -120,7 +120,7 @@ git push origin usif-1
 6. اعمل **Redeploy** لخدمة الـ Backend.
 7. اختبر الاتصال:
    ```
-   GET https://backend-porject-usif.up.railway.app/health
+   GET https://newproject-production-396a.up.railway.app/health
    ```
    يجب أن ترى `"database": "connected"`.
 
@@ -136,7 +136,7 @@ git push origin usif-1
 
 ### في بيئة الإنتاج (Production):
 استخدم رابط الـ Railway مباشرة:
-`https://backend-porject-usif.up.railway.app/api`
+`https://newproject-production-396a.up.railway.app/api`
 
 ---
 

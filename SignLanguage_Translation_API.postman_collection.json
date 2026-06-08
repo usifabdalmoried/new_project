@@ -2,7 +2,7 @@
 	"info": {
 		"_postman_id": "sign-language-api-v2",
 		"name": "🤟 Sign Language Translation API",
-		"description": "Complete API collection for the Sign Language Translation Backend.\n\n---\n\n## 🖥️ Local (default variables)\n\n**Backend:** http://localhost:3000\n\n**AI Service:** http://127.0.0.1:5000\n\n---\n\n## 🚀 Railway (production)\n\n**Backend:** https://backend-porject-usif.up.railway.app\n\n**AI Service:** https://newproject-porject-usif.up.railway.app\n\n---\n\n## 📌 Variables\n\n| Variable | Local | Railway |\n|---|---|---|\n| `serverUrl` | http://localhost:3000 | https://backend-porject-usif.up.railway.app |\n| `baseUrl` | http://localhost:3000/api | https://backend-porject-usif.up.railway.app/api |\n| `aiBaseUrl` | http://127.0.0.1:5000 | https://newproject-porject-usif.up.railway.app |\n| `authToken` | Auto-filled after Login | Auto-filled after Login |\n\n---\n\n## 📋 Steps\n1. Start **AI Service** (`ai_service/app.py`) then **Backend** (`npm run dev`)\n2. Run **Register** to create account\n3. Run **Login** → Token saved automatically ✅\n4. Upload image via **Upload & Translate Image**\n5. Debug AI from **🤖 AI Service (Direct)** → `/predict/debug`\n\n---\n\n## 🤖 AI notes\n- Classes: `0-9` then `A-Z` (36 total)\n- Confidence threshold: `0.25`\n- MediaPipe hand detection: `min_detection_confidence = 0.3`\n- Form field name: `file`",
+		"description": "Complete API collection for the Sign Language Translation Backend.\n\n---\n\n## 🖥️ Local (default variables)\n\n**Backend:** http://localhost:5000\n\n**AI Service:** http://127.0.0.1:5001\n\n---\n\n## 🚀 Railway (production)\n\n**Backend:** https://newproject-production-396a.up.railway.app\n\n**AI Service:** https://newproject-porject-usif.up.railway.app\n\n---\n\n## 📌 Variables\n\n| Variable | Local | Railway |\n|---|---|---|\n| `serverUrl` | http://localhost:5000 | https://newproject-production-396a.up.railway.app |\n| `baseUrl` | http://localhost:5000/api | https://newproject-production-396a.up.railway.app/api |\n| `aiBaseUrl` | http://127.0.0.1:5001 | https://newproject-porject-usif.up.railway.app |\n| `authToken` | Auto-filled after Login | Auto-filled after Login |\n\n---\n\n## 📋 Steps\n1. Start **AI Service** (`ai_service/app.py`) then **Backend** (`npm run dev`)\n2. Run **Register** to create account\n3. Run **Login** → Token saved automatically ✅\n4. Upload image via **Upload & Translate Image**\n5. Debug AI from **🤖 AI Service (Direct)** → `/predict/debug`\n\n---\n\n## 🤖 AI notes\n- Classes: `0-9` then `A-Z` (36 total)\n- Confidence threshold: `0.25`\n- MediaPipe hand detection: `min_detection_confidence = 0.3`\n- Form field name: `file`",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"auth": {
@@ -18,13 +18,13 @@
 	"variable": [
 		{
 			"key": "baseUrl",
-			"value": "http://localhost:5000/api",
+			"value": "https://newproject-production-396a.up.railway.app/api",
 			"type": "string",
 			"disabled": false
 		},
 		{
 			"key": "serverUrl",
-			"value": "http://localhost:5000",
+			"value": "https://newproject-production-396a.up.railway.app",
 			"type": "string",
 			"disabled": false
 		},
@@ -36,7 +36,7 @@
 		},
 		{
 			"key": "aiBaseUrl",
-			"value": "http://127.0.0.1:5001",
+			"value": "https://newproject-production-396a.up.railway.app",
 			"type": "string",
 			"disabled": false
 		}
